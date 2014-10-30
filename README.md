@@ -10,7 +10,7 @@ Travail pratique #2 présenté par :
 
 Énoncé
 --------------
-http://ift287-dpm.espaceweb.usherbrooke.ca/
+http://ift287-dpm.espaceweb.usherbrooke.ca/travauxPratiques/TP3/TP3.pdf
 
 Version
 ----
@@ -31,5 +31,5 @@ http://rogerdudler.github.io/git-guide/
 
 License
 ----
-
+Voir fichier LICENCE
 Université de Sherbrooke, Faculté des sciences, 2014
