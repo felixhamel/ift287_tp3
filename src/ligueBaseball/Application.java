@@ -90,7 +90,7 @@ public class Application
 				}
 			} catch(Exception e) {
 				System.out.println("Exception ("+e.getClass().getName()+"): " + e.getMessage());
-				e.printStackTrace();
+				//e.printStackTrace();
 			}
 		}
 	}
@@ -124,7 +124,7 @@ public class Application
 			case "quitter":
 				exitProgram();
 			default:
-				System.out.println("Commande non reconnue.");
+				System.out.println("Commande non implémentée.");
 				break;
 		}
 	}
