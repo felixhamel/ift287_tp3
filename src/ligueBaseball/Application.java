@@ -1,11 +1,8 @@
 package ligueBaseball;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.Scanner;
 
@@ -18,7 +15,6 @@ public class Application
 	private ApplicationParameters parameters;
 	private Connection connectionWithDatabase;
 	private static HashMap<String, String> actions = new HashMap<>();
-	private boolean run = true;
 	
 	static {
 		// Create all the available actions.
@@ -144,6 +140,9 @@ public class Application
 		}
 	}
 	
+	/**
+	 * Close connection with database and exit.
+	 */
 	private void exitProgram()
 	{
 		closeConnectionWithDatabase();
