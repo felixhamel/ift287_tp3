@@ -1,14 +1,21 @@
 package ligueBaseball;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Scanner;
 
 import ligueBaseball.command.Command;
+import ligueBaseball.exceptions.CreatePlayerParametersMissingException;
 import ligueBaseball.exceptions.FailedToConnectToDatabaseException;
+import ligueBaseball.exceptions.FieldNameAlreadyTakenException;
+import ligueBaseball.exceptions.PlayerAlreadyExistsException;
+import ligueBaseball.exceptions.TeamIsNotEmptyException;
+import ligueBaseball.exceptions.TeamNameAlreadyTakenException;
 import ligueBaseball.exceptions.UnknownCommandException;
 
 public class Application 
@@ -116,7 +123,7 @@ public class Application
 	 * Execute the command with the informations given by the user.
 	 * @param command - Command requested by the user.
 	 */
-	private void executeCommand(Command command)
+	private void executeCommand(Command command) throws Exception
 	{
 		switch(command.getCommandName()) {
 			case "creerEquipe":
@@ -173,31 +180,119 @@ public class Application
 	 * Crée une nouvelle équipe
 	 * @param parameters - <EquipeNom> [<NomTerrain> AdresseTerrain]
 	 */
-	private void creerEquipe(ArrayList<String> parameters) {
-		//TODO
+	private void creerEquipe(ArrayList<String> parameters) throws SQLException, TeamNameAlreadyTakenException, FieldNameAlreadyTakenException {
+		/*Statement stmt = null;
+		String query = "SELECT equipenom FROM equipe WHERE equipenom = " + parameters.get(1) + ";";
+		try {
+			stmt = connectionWithDatabase.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			if (rs.next()) {
+				throw new TeamNameAlreadyTakenException(parameters.get(1));
+			}
+			else {
+				query = "SELECT * FROM terrain WHERE terrainnom = " + parameters.get(2) + ";";
+				rs = stmt.executeQuery(query);
+				if (rs.next()) {
+					throw new FieldNameAlreadyTakenException(parameters.get(2));
+				}
+				else {
+					String update = null;
+					if (parameters.get(3) != null) {
+						update = "INSERT INTO terrain (terrainnom, terrainadresse) VALUES ('" + parameters.get(2) + "', '" + parameters.get(3) + "');";
+					}
+					else {
+						update = "INSERT INTO terrain (terrainnom) VALUES ('" + parameters.get(2) + "');";
+					}
+					stmt.executeUpdate(update);
+					query = "SELECT terrainid FROM terrain WHERE terrainnom = " + parameters.get(2) + ";";
+					rs = stmt.executeQuery(query);
+					update = "INSERT INTO equipe (equipenom, terrainid) VALUES ('" + parameters.get(1) + "', '" + rs.next() + ");";
+					stmt.executeUpdate(update);
+				}
+			}
+		}
+		finally {
+			closeStmt(stmt);
+		}*/
 	}
 	
 	/**
 	 * Afficher la liste des équipes
 	 */
-	private void afficherEquipes() {
-		//TODO
+	private void afficherEquipes() throws SQLException {
+		/*Statement stmt = null;
+		String query = "SELECT equipeid, equipenom FROM equipe ORDER BY equipenom;";
+		try {
+			stmt = connectionWithDatabase.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			while (rs.next()) {
+				System.out.println(
+						rs.getString("equipenom") + ", equipe no " + rs.getString("equipeid")
+				);
+			}
+		}
+		finally {
+			closeStmt(stmt);
+		}*/
 	}
 	
 	/**
 	 * Supprimer une équipe
 	 * @param parameters - <EquipeNom>
 	 */
-	private void supprimerEquipe(ArrayList<String> parameters) {
-		//TODO
+	private void supprimerEquipe(ArrayList<String> parameters) throws SQLException, TeamIsNotEmptyException {
+		/*Statement stmt = null;
+		String query = "SELECT equipeid FROM equipe WHERE equipenom = " + parameters.get(1) + ";";
+		try {
+			stmt = connectionWithDatabase.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			query = "SELECT * FROM faitpartie WHERE equipedid = " + rs.next() + ";";
+			rs = stmt.executeQuery(query);
+			if (rs.next()) {
+				throw new TeamIsNotEmptyException(parameters.get(1));
+			}
+			else {
+				String delete = "DELETE FROM equipe WHERE equipenom = " + parameters.get(1) + ";";
+				stmt.executeUpdate(delete);
+			}
+		}
+		finally {
+			closeStmt(stmt);
+		}*/
 	}
 	
 	/**
 	 * Créer un joueur	
 	 * @param parameters - <JoueurNom> <JoueurPrenom> [<EquipeNom> <Numero> [<DateDbut>]]
 	 */
-	private void creerJoueur(ArrayList<String> parameters) {
-		//TODO
+	private void creerJoueur(ArrayList<String> parameters) throws SQLException, CreatePlayerParametersMissingException, PlayerAlreadyExistsException {
+		/*if (parameters.get(3) != null || parameters.get(4) != null) {
+			if (parameters.get(3) == null || parameters.get(4) == null) {
+				throw new CreatePlayerParametersMissingException();
+			}
+		}
+		Statement stmt = null;
+		String query = "SELECT * FROM joueur WHERE joueurnom = " + parameters.get(1) + " OR joueurprenom = " + parameters.get(2) + ";";
+		try {
+			stmt = connectionWithDatabase.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			if (rs.next()) {
+				throw new PlayerAlreadyExistsException(parameters.get(2), parameters.get(1));
+			}
+			else {
+				String update = "INSERT INTO joueur (joueurnom, joueurprenom) VALUES ('" + parameters.get(1) + "', '" + parameters.get(2) + "');";
+				stmt.executeUpdate(update);
+				if (parameters.get(3) != null) {
+					query = "SELECT joueurid FROM joueur WHERE joueurprenom = " + parameters.get(2) + " AND joueurnom = " + parameters.get(1) + ";";
+					rs = stmt.executeQuery(query);
+					String joueurId = rs.next();
+					update = "INSERT INTO faitpartie ("
+				}
+			}
+		}
+		finally {
+			closeStmt(stmt);
+		}*/
 	}
 	
 	/**
@@ -279,6 +374,22 @@ public class Application
 		System.out.println("Liste de toutes les commandes disponibles : ");
 		for(Entry<String, String> entry : actions.entrySet()) {
 			System.out.println(" - " + entry.getKey() + " : " + entry.getValue());
+		}
+	}
+	
+	/**
+	 * Close the statement if not null
+	 * @param stmt - SQL statement
+	 */
+	private void closeStmt(Statement stmt) {
+		if (stmt != null) {
+			try {
+				stmt.close();
+			}
+			catch (Exception e) {
+				System.out.println("Exception ("+e.getClass().getName()+"): " + e.getMessage());
+				//e.printStackTrace();
+			}
 		}
 	}
 	
