@@ -2,6 +2,7 @@ package ligueBaseball;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Scanner;
@@ -118,6 +119,45 @@ public class Application
 	private void executeCommand(Command command)
 	{
 		switch(command.getCommandName()) {
+			case "creerEquipe":
+				creerEquipe(command.getParameters());
+				break;
+			case "afficherEquipes":
+				afficherEquipes();
+				break;
+			case "supprimerEquipe":
+				supprimerEquipe(command.getParameters());
+				break;
+			case "creerJoueur":
+				creerJoueur(command.getParameters());
+				break;
+			case "afficherJoueursEquipe":
+				afficherJoueursEquipe(command.getParameters());
+				break;
+			case "supprimerJoueur":
+				supprimerJoueur(command.getParameters());
+				break;
+			case "creerMatch":
+				creerMatch(command.getParameters());
+				break;
+			case "creerArbitre":
+				creerArbitre(command.getParameters());
+				break;
+			case "afficherArbitres":
+				afficherArbitres();
+				break;
+			case "arbitrerMatch":
+				arbitrerMatch(command.getParameters());
+				break;
+			case "entrerResultatMatch":
+				entrerResultatMatch(command.getParameters());
+				break;
+			case "afficherResultatsDate":
+				afficherResultatsDate(command.getParameters());
+				break;
+			case "afficherResultats":
+				afficherResultats(command.getParameters());
+				break;
 			case "aide":
 				showAvailableActions();
 				break;
@@ -127,6 +167,108 @@ public class Application
 				System.out.println("Commande non implémentée.");
 				break;
 		}
+	}
+	
+	/**
+	 * Crée une nouvelle équipe
+	 * @param parameters - <EquipeNom> [<NomTerrain> AdresseTerrain]
+	 */
+	private void creerEquipe(ArrayList<String> parameters) {
+		//TODO
+	}
+	
+	/**
+	 * Afficher la liste des équipes
+	 */
+	private void afficherEquipes() {
+		//TODO
+	}
+	
+	/**
+	 * Supprimer une équipe
+	 * @param parameters - <EquipeNom>
+	 */
+	private void supprimerEquipe(ArrayList<String> parameters) {
+		//TODO
+	}
+	
+	/**
+	 * Créer un joueur	
+	 * @param parameters - <JoueurNom> <JoueurPrenom> [<EquipeNom> <Numero> [<DateDbut>]]
+	 */
+	private void creerJoueur(ArrayList<String> parameters) {
+		//TODO
+	}
+	
+	/**
+	 * Afficher la liste des joueurs
+	 * @param parameters - [<EquipeNom>]
+	 */
+	private void afficherJoueursEquipe(ArrayList<String> parameters) {
+		//TODO
+	}
+	
+	/**
+	 * Supprime un joueur et ses informations
+	 * @param parameters - <JoueurNom> <JoueurPrenom>
+	 */
+	private void supprimerJoueur(ArrayList<String> parameters) {
+		//TODO
+	}
+	
+	/**
+	 * Ajouter un match, en calculant le MatchId automatiquement
+	 * @param parameters - <MatchDate> <MatchHeure> <EquipeNomLocal> <EquipeNomVisiteur>
+	 */
+	private void creerMatch(ArrayList<String> parameters) {
+		//TODO
+	}
+	
+	/**
+	 * Crée un nouvel arbitre, en calculant le ArbitreId automatiquement
+	 * @param parameters - <ArbitreNom> <ArbitrePrenom>
+	 */
+	private void creerArbitre(ArrayList<String> parameters) {
+		//TODO
+	}
+	
+	/**
+	 * Afficher la liste des arbitres en ordre alphabétique
+	 */
+	private void afficherArbitres() {
+		//TODO
+	}
+	
+	/**
+	 * Affecter des arbitres à un match
+	 * @param parameters - <MatchDate> <MatchHeure> <EquipeNomLocal> <EquipeNomVisiteur> <ArbitreNom> <ArbitrePrenom>
+	 */
+	private void arbitrerMatch(ArrayList<String> parameters) {
+		//TODO
+	}
+	
+	/**
+	 * Entrer le résultat d'un match.
+	 * @param parameters - <MatchDate> <MatchHeure> <EquipeNomLocal> <EquipeNomVisiteur> <PointsLocal> <PointsVisiteur>
+	 */
+	private void entrerResultatMatch(ArrayList<String> parameters) {
+		//TODO
+	}
+	
+	/**
+	 * Afficher les résultats de tous les matchs
+	 * @param parameters - [<APartirDate>]
+	 */
+	private void afficherResultatsDate(ArrayList<String> parameters) {
+		//TODO
+	}
+	
+	/**
+	 * Afficher les résultats des matchs où une équipe a participé
+	 * @param parameters - [<EquipeNom>]
+	 */
+	private void afficherResultats(ArrayList<String> parameters) {
+		//TODO
 	}
 	
 	/**
