@@ -32,4 +32,5 @@ http://rogerdudler.github.io/git-guide/
 License
 ----
 Voir fichier LICENCE
+
 Université de Sherbrooke, Faculté des sciences, 2014
