@@ -181,7 +181,7 @@ public class Application
 	 * @param parameters - <EquipeNom> [<NomTerrain> AdresseTerrain]
 	 */
 	private void creerEquipe(ArrayList<String> parameters) throws SQLException, TeamNameAlreadyTakenException, FieldNameAlreadyTakenException {
-		/*Statement stmt = null;
+		Statement stmt = null;
 		String query = "SELECT equipenom FROM equipe WHERE equipenom = " + parameters.get(1) + ";";
 		try {
 			stmt = connectionWithDatabase.createStatement();
@@ -206,21 +206,21 @@ public class Application
 					stmt.executeUpdate(update);
 					query = "SELECT terrainid FROM terrain WHERE terrainnom = " + parameters.get(2) + ";";
 					rs = stmt.executeQuery(query);
-					update = "INSERT INTO equipe (equipenom, terrainid) VALUES ('" + parameters.get(1) + "', '" + rs.next() + ");";
+					update = "INSERT INTO equipe (equipenom, terrainid) VALUES ('" + parameters.get(1) + "', '" + rs.getString("terrainid") + ");";
 					stmt.executeUpdate(update);
 				}
 			}
 		}
 		finally {
 			closeStmt(stmt);
-		}*/
+		}
 	}
 	
 	/**
-	 * Afficher la liste des équipes
+	 * Afficher la liste des equipes
 	 */
 	private void afficherEquipes() throws SQLException {
-		/*Statement stmt = null;
+		Statement stmt = null;
 		String query = "SELECT equipeid, equipenom FROM equipe ORDER BY equipenom;";
 		try {
 			stmt = connectionWithDatabase.createStatement();
@@ -233,20 +233,20 @@ public class Application
 		}
 		finally {
 			closeStmt(stmt);
-		}*/
+		}
 	}
 	
 	/**
-	 * Supprimer une équipe
+	 * Supprimer une equipe
 	 * @param parameters - <EquipeNom>
 	 */
 	private void supprimerEquipe(ArrayList<String> parameters) throws SQLException, TeamIsNotEmptyException {
-		/*Statement stmt = null;
+		Statement stmt = null;
 		String query = "SELECT equipeid FROM equipe WHERE equipenom = " + parameters.get(1) + ";";
 		try {
 			stmt = connectionWithDatabase.createStatement();
 			ResultSet rs = stmt.executeQuery(query);
-			query = "SELECT * FROM faitpartie WHERE equipedid = " + rs.next() + ";";
+			query = "SELECT * FROM faitpartie WHERE equipedid = " + rs.getString("equipeid") + ";";
 			rs = stmt.executeQuery(query);
 			if (rs.next()) {
 				throw new TeamIsNotEmptyException(parameters.get(1));
@@ -258,15 +258,15 @@ public class Application
 		}
 		finally {
 			closeStmt(stmt);
-		}*/
+		}
 	}
 	
 	/**
-	 * Créer un joueur	
+	 * Creer un joueur	
 	 * @param parameters - <JoueurNom> <JoueurPrenom> [<EquipeNom> <Numero> [<DateDbut>]]
 	 */
 	private void creerJoueur(ArrayList<String> parameters) throws SQLException, CreatePlayerParametersMissingException, PlayerAlreadyExistsException {
-		/*if (parameters.get(3) != null || parameters.get(4) != null) {
+		if (parameters.get(3) != null || parameters.get(4) != null) {
 			if (parameters.get(3) == null || parameters.get(4) == null) {
 				throw new CreatePlayerParametersMissingException();
 			}
@@ -285,14 +285,15 @@ public class Application
 				if (parameters.get(3) != null) {
 					query = "SELECT joueurid FROM joueur WHERE joueurprenom = " + parameters.get(2) + " AND joueurnom = " + parameters.get(1) + ";";
 					rs = stmt.executeQuery(query);
-					String joueurId = rs.next();
-					update = "INSERT INTO faitpartie ("
+					String joueurId = rs.getString("joueurid");
+					//update = "INSERT INTO faitpartie ("
+					//TODO
 				}
 			}
 		}
 		finally {
 			closeStmt(stmt);
-		}*/
+		}
 	}
 	
 	/**
