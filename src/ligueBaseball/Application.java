@@ -2,6 +2,7 @@ package ligueBaseball;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -116,7 +117,7 @@ public class Application
 		System.out.print("$ ");
 		Scanner reader = new Scanner(System.in);
 		try {
-			return Command.extractCommandFromString(reader.next());
+			return Command.extractCommandFromString(reader.nextLine());
 		} finally {
 			// BUG dans Eclipse, va faire plein de retour de ligne si décommenté.
 			//reader.close();
@@ -305,7 +306,26 @@ public class Application
 	 * @param parameters - [<EquipeNom>]
 	 */
 	private void afficherJoueursEquipe(ArrayList<String> parameters) {
-		//TODO
+		if(parameters.isEmpty()) {
+			// Throw
+		}
+		// Prepare request
+		try {
+			PreparedStatement statement = connectionWithDatabase.prepareStatement("SELECT joueur.joueurnom, joueur.joueurprenom, joueur.joueurid FROM faitpartie INNER JOIN joueur ON faitpartie.joueurid = joueur.joueurid INNER JOIN equipe ON faitpartie.equipeid = equipe.equipeid WHERE equipe.equipenom = ? ORDER BY equipe.equipeid ASC, faitpartie.numero ASC;");
+			statement.setString(1, parameters.get(0));
+			ResultSet result = statement.executeQuery();
+			
+			// Check if we received any results
+			if(!result.isBeforeFirst()) {
+				System.out.println("Erreur: L'équipe '" + parameters.get(0) + " n'existe pas.");
+			}
+			
+			while(result.next()) {
+				System.out.println(result.getString("joueurprenom") + " " + result.getString("joueurnom") + " #" + result.getInt("joueurid"));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**
