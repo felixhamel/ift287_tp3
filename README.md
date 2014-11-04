@@ -1,7 +1,7 @@
 IFT287_TP3
 =========
 
-Travail pratique #2 présenté par :
+Travail pratique #3 présenté par :
 
   - Alexandre Blais
   - Érika Demers
@@ -21,8 +21,8 @@ Installation
 --------------
 
 ```sh
-git clone https://github.com/alexblais/IFT287_TP2.git
-cd IFT287_TP2
+git clone https://github.com/felixhamel/ift287_tp3.git
+cd ift287_tp3
 ```
 
 Assistance utilisation Git
