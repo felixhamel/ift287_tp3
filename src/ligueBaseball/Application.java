@@ -1,12 +1,14 @@
 package ligueBaseball;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Scanner;
 
 import ligueBaseball.command.Command;
@@ -55,13 +57,15 @@ public class Application
 	 */
 	private void openConnectionWithDatabase() throws FailedToConnectToDatabaseException
 	{
-		/*try {
-			connectionWithDatabase = 
-					DriverManager.getConnection("jdbc :postgresql :" + parameters.getDatabaseName(), 
-												parameters.getUsername(), parameters.getPassword());
+		try {
+			String connectionString = "jdbc:postgresql:" + parameters.getDatabaseName();
+			Properties connectionParameters = new Properties();
+			connectionParameters.setProperty("user", parameters.getUsername());
+			connectionParameters.setProperty("password", parameters.getPassword());
+			connectionWithDatabase = DriverManager.getConnection(connectionString, connectionParameters);
 		} catch (SQLException e) {
 			throw new FailedToConnectToDatabaseException(parameters.getDatabaseName(), e);
-		}*/
+		}
 	}
 	
 	/**
@@ -98,7 +102,7 @@ public class Application
 				}
 			} catch(Exception e) {
 				System.out.println("Exception ("+e.getClass().getName()+"): " + e.getMessage());
-				//e.printStackTrace();
+				e.printStackTrace();
 			}
 		}
 	}
