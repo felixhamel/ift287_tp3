@@ -458,14 +458,49 @@ public class Application
 	 * @param parameters - <ArbitreNom> <ArbitrePrenom>
 	 */
 	private void creerArbitre(ArrayList<String> parameters) {
-		//TODO
+		boolean trouver = false;
+		try {
+			PreparedStatement statement = connectionWithDatabase.prepareStatement("SELECT * FROM arbitre where arbitrenom ="
+					+ "'" + parameters.get(0) + "' and arbitreprenom = '" + parameters.get(1) + "';");
+			ResultSet arbitres = statement.executeQuery();
+			while(arbitres.next()) {
+				System.out.println("Erreur: l'arbitre existe déjà.");
+				trouver = true;
+			}
+			if(trouver == false){
+				statement = connectionWithDatabase.prepareStatement("SELECT arbitreid FROM arbitre order"
+						+ " by arbitreid desc limit 1;");
+				ResultSet arbitresid = statement.executeQuery();
+				arbitresid.next();
+				int arbitreid = arbitresid.getInt("arbitreid");
+				arbitreid ++;
+				statement = connectionWithDatabase.prepareStatement("insert into arbitre (arbitreid, arbitrenom, "
+						+ "arbitreprenom) values(" + arbitreid + ", '" + parameters.get(0) + "', '" + parameters.get(1) + "');");
+				statement.executeUpdate();
+			}
+			statement.close();
+			System.out.println("Ajout fait avec succès.");
+		} catch(SQLException e) {
+			System.out.println("Erreur: ProblÃ¨me lors de l'ajout dans la table 'arbitre'.");
+		}
 	}
 	
 	/**
 	 * Afficher la liste des arbitres en ordre alphabÃ©tique
 	 */
 	private void afficherArbitres() {
-		//TODO
+		try {
+			PreparedStatement statement = connectionWithDatabase.prepareStatement("SELECT arbitrenom, arbitreprenom FROM arbitre"
+					+ " order by arbitrenom;");
+			ResultSet arbitres = statement.executeQuery();
+			System.out.println("Les arbitres sont: ");
+			while(arbitres.next()) {
+				System.out.println(arbitres.getString("arbitrenom") + " " + arbitres.getString("arbitreprenom"));
+			}
+			statement.close();
+		} catch(SQLException e) {
+			System.out.println("Erreur: ProblÃ¨me lors de la requête dans la table 'arbitre'.");
+		}
 	}
 	
 	/**
@@ -473,7 +508,65 @@ public class Application
 	 * @param parameters - <MatchDate> <MatchHeure> <EquipeNomLocal> <EquipeNomVisiteur> <ArbitreNom> <ArbitrePrenom>
 	 */
 	private void arbitrerMatch(ArrayList<String> parameters) {
-		//TODO
+		boolean trouver = false;
+		int nbrArbitres = 0;
+		try {
+			PreparedStatement statement = connectionWithDatabase.prepareStatement("select matchid from match "
+					+ "left outer join equipe as local on local.equipeid = match.equipelocal "
+					+ "left outer join equipe as visiteur on visiteur.equipeid = match.equipevisiteur "
+					+ "where match.matchdate = '" + parameters.get(0) + "' and match.matchheure = '" + parameters.get(1) + "' and "
+					+ "local.equipenom = '" + parameters.get(2) + "' and visiteur.equipenom = '"+ parameters.get(3) + "' ;");
+			ResultSet matchs = statement.executeQuery();
+			while(matchs.next()) {
+				trouver = true;
+			}
+			if (trouver == true){
+				trouver = false;
+				statement = connectionWithDatabase.prepareStatement("SELECT * FROM arbitre where arbitrenom ="
+						+ "'" + parameters.get(4) + "' and arbitreprenom = '" + parameters.get(5) + "';");
+				ResultSet arbitre = statement.executeQuery();
+				while(arbitre.next()) {
+					trouver = true;
+				}
+				if (trouver == true){
+					statement = connectionWithDatabase.prepareStatement("SELECT count(*) as nbr from arbitrer "
+							+ "left outer join match on match.matchid = arbitrer.matchid "
+							+ "left outer join equipe as local on local.equipeid = match.equipelocal "
+							+ "left outer join equipe as visiteur on visiteur.equipeid = match.equipevisiteur "
+							+ "where match.matchdate = '" + parameters.get(0) + "' and match.matchheure = '" + parameters.get(1) + "' and "
+							+ "local.equipenom = '" + parameters.get(2) + "' and visiteur.equipenom = '"+ parameters.get(3) + "' ;");
+					ResultSet nbrarbitres = statement.executeQuery();
+					while(nbrarbitres.next()) {
+						nbrArbitres = nbrarbitres.getInt("nbr");
+					}
+					if(nbrArbitres < 4){
+						statement = connectionWithDatabase.prepareStatement("INSERT INTO arbitrer(arbitreid, matchid) "
+								+ "VALUES ((SELECT arbitreid FROM arbitre where arbitrenom ="
+								+ "'" + parameters.get(4) + "' and arbitreprenom = '" + parameters.get(5) + "'), "
+								+ "(select matchid from match left outer join equipe as local on local.equipeid = "
+								+ "match.equipelocal left outer join equipe as visiteur on visiteur.equipeid = "
+								+ "match.equipevisiteur where match.matchdate = '" + parameters.get(0) + "' and match.matchheure = '" 
+								+ parameters.get(1) + "' and local.equipenom = '" + parameters.get(2)
+								+ "' and visiteur.equipenom = '"+ parameters.get(3) + "' ));");
+						statement.executeUpdate();
+						System.out.println("Ajout fait avec succès.");
+					}
+					else{
+						System.out.println("Erreur: Il y a déjà 4 arbitres pour ce match");
+					}
+					statement.close();
+				}
+				else{
+					System.out.println("Erreur: L'arbitre n'existe pas.");
+				}
+			}
+			else{
+				System.out.println("Erreur: Le match n'existe pas.");
+			}
+			
+		} catch(SQLException e) {
+			System.out.println("Erreur: ProblÃ¨me lors de l'ajout dans la table 'arbitrer'.");
+		}
 	}
 	
 	/**
