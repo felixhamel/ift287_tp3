@@ -69,6 +69,7 @@ public class Application
 			connectionParameters.setProperty("user", parameters.getUsername());
 			connectionParameters.setProperty("password", parameters.getPassword());
 			connectionWithDatabase = DriverManager.getConnection(connectionString, connectionParameters);
+			connectionWithDatabase.setAutoCommit(false);
 		} catch (SQLException e) {
 			throw new FailedToConnectToDatabaseException(parameters.getDatabaseName(), e);
 		}
@@ -141,7 +142,7 @@ public class Application
 				createANewTeam(command.getParameters());
 				break;
 			case "afficherEquipes":
-				afficherEquipes();
+				displayTeams();
 				break;
 			case "supprimerEquipe":
 				supprimerEquipe(command.getParameters());
@@ -153,7 +154,7 @@ public class Application
 				afficherJoueursEquipe(command.getParameters());
 				break;
 			case "supprimerJoueur":
-				supprimerJoueur(command.getParameters());
+				deletePlayer(command.getParameters());
 				break;
 			case "creerMatch":
 				creerMatch(command.getParameters());
@@ -219,29 +220,32 @@ public class Application
 					rs = statement.executeQuery(query);
 					update = "INSERT INTO equipe (equipenom, terrainid) VALUES ('" + parameters.get(1) + "', '" + rs.getString("terrainid") + ");";
 					statement.executeUpdate(update);
+					
+					connectionWithDatabase.commit();
 				}
 			}
 		}
 		finally {
-			closeStmt(statement);
+			closeStatement(statement);
 		}
 	}
 	
 	/**
-	 * Afficher la liste des equipes
+	 * Display all the teams.
 	 */
-	private void afficherEquipes() throws SQLException {
-		Statement stmt = null;
-		String query = "SELECT equipeid, equipenom FROM equipe ORDER BY equipenom;";
+	private void displayTeams()  {
+		Statement statement = null;
 		try {
-			stmt = connectionWithDatabase.createStatement();
-			ResultSet rs = stmt.executeQuery(query);
-			while (rs.next()) {
-				System.out.println(rs.getString("equipenom") + ", equipe no " + rs.getString("equipeid"));
+			statement = connectionWithDatabase.createStatement();
+			ResultSet resultSet = statement.executeQuery("SELECT equipeid, equipenom FROM equipe ORDER BY equipenom;");
+			while (resultSet.next()) {
+				System.out.println(String.format("%s, équipe # %s", resultSet.getString("equipenom"), resultSet.getString("equipeid")));
 			}
+		} catch(SQLException e) {
+			System.out.println("Erreur: Impossible d'aller chercher les équipes présentes dans la base de données.");
 		}
 		finally {
-			closeStmt(stmt);
+			closeStatement(statement);
 		}
 	}
 	
@@ -263,10 +267,11 @@ public class Application
 			else {
 				String delete = "DELETE FROM equipe WHERE equipenom = " + parameters.get(1) + ";";
 				stmt.executeUpdate(delete);
+				connectionWithDatabase.commit();
 			}
 		}
 		finally {
-			closeStmt(stmt);
+			closeStatement(stmt);
 		}
 	}
 	
@@ -297,11 +302,12 @@ public class Application
 					String joueurId = rs.getString("joueurid");
 					//update = "INSERT INTO faitpartie ("
 					//TODO
+					connectionWithDatabase.commit();
 				}
 			}
 		}
 		finally {
-			closeStmt(stmt);
+			closeStatement(stmt);
 		}
 	}
 	
@@ -361,11 +367,11 @@ public class Application
 	}
 	
 	/**
-	 * Supprime un joueur et ses informations
+	 * Delete a player and all informations related to it.
 	 * @param parameters - <JoueurNom> <JoueurPrenom>
-	 * @throws MissingCommandParameterException 
+	 * @throws MissingCommandParameterException Missing parameter.
 	 */
-	private void supprimerJoueur(ArrayList<String> parameters) throws MissingCommandParameterException 
+	private void deletePlayer(ArrayList<String> parameters) throws MissingCommandParameterException 
 	{
 		if(parameters.isEmpty()) {
 			throw new MissingCommandParameterException("supprimerJoueur", "JoueurNom");
@@ -387,8 +393,9 @@ public class Application
 				int playerId = player.getInt("joueurid");
 				statement.close();
 				
+				// Confirmation
 				System.out.println("Êtes-vous certain de vouloir supprimer ce joueur ? (O/N) : ");
-				int confirmation = new BufferedReader(new InputStreamReader(System.in)).readLine().trim().charAt(0);
+				char confirmation = new BufferedReader(new InputStreamReader(System.in)).readLine().trim().charAt(0);
 				if(confirmation == 'o' || confirmation == 'O') {
 					deletePlayerFromDatabase(playerId);
 				}
@@ -398,6 +405,10 @@ public class Application
 		}
 	}
 	
+	/**
+	 * Delete a player from the database. It will remove all traces of it in plays and others.
+	 * @param playerId - ID of the player to delete.
+	 */
 	private void deletePlayerFromDatabase(int playerId) {
 		try {
 			connectionWithDatabase.setAutoCommit(false);
@@ -438,6 +449,7 @@ public class Application
 				deleteJoueur.close();
 			}
 			
+			// Commit modifications
 			connectionWithDatabase.commit();
 			
 		} catch(SQLException e) {
@@ -515,7 +527,7 @@ public class Application
 	 * Close the statement if not null
 	 * @param stmt - SQL statement
 	 */
-	private void closeStmt(Statement stmt) {
+	private void closeStatement(Statement stmt) {
 		if (stmt != null) {
 			try {
 				stmt.close();
