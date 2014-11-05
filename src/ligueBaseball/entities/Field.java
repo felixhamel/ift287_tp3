@@ -76,7 +76,7 @@ public class Field extends DatabaseEntity
         PreparedStatement statement = null;
         try {
             id = getNextIdForTable(databaseConnection, "terrain", "terrainid");
-            statement = databaseConnection.prepareStatement("INSERT INTO terrain (terrainid, terrainnom, terrainadresse) VALUES(?, ?' ?);");
+            statement = databaseConnection.prepareStatement("INSERT INTO terrain (terrainid, terrainnom, terrainadresse) VALUES(?, ?, ?);");
             statement.setInt(1, id);
             statement.setString(2, name);
             statement.setString(3, address);

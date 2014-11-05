@@ -119,7 +119,7 @@ public class Team extends DatabaseEntity
         PreparedStatement statement = null;
         try {
             id = getNextIdForTable(databaseConnection, "equipe", "equipeid");
-            statement = databaseConnection.prepareStatement("INSERT INTO equipe (equipeid, equipenom, terrainid) VALUES(?, ?' ?);");
+            statement = databaseConnection.prepareStatement("INSERT INTO equipe (equipeid, equipenom, terrainid) VALUES(?, ?, ?);");
             statement.setInt(1, id);
             statement.setString(2, name);
             statement.setInt(3, fieldId);
