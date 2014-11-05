@@ -20,6 +20,15 @@ public class Team extends DatabaseEntity
 
     public static List<Team> getAllTeams(Connection databaseConnection)
     {
+        PreparedStatement statement = null;
+
+        try {
+            statement = databaseConnection.prepareStatement("");
+        } catch (SQLException e) {
+
+        } finally {
+            closeStatement(statement);
+        }
         return null;
     }
 
