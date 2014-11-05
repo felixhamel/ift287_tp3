@@ -220,7 +220,7 @@ public class Application
                 deletePlayer(command.getParameters());
                 break;
             case "creerMatch":
-                creerMatch(command.getParameters());
+                createMatch(command.getParameters());
                 break;
             case "creerArbitre":
                 creerArbitre(command.getParameters());
@@ -482,7 +482,7 @@ public class Application
     }
 
     /**
-     * Ajouter un match, en calculant le MatchId automatiquement
+     * Create a new match.
      *
      * @param parameters - <MatchDate> <MatchHeure> <EquipeNomLocal> <EquipeNomVisiteur>
      * @throws MissingCommandParameterException
@@ -492,7 +492,7 @@ public class Application
      * @throws FailedToRetrieveTeamIdException
      * @throws FailedToRetrieveNextKeyFromSequenceException
      */
-    private void creerMatch(ArrayList<String> parameters) throws MissingCommandParameterException, TeamCantPlayAgainstItselfException, CannotFindTeamWithNameException, FailedToRetrieveFieldIdException, FailedToRetrieveTeamIdException, FailedToRetrieveNextKeyFromSequenceException
+    private void createMatch(ArrayList<String> parameters) throws MissingCommandParameterException, TeamCantPlayAgainstItselfException, CannotFindTeamWithNameException, FailedToRetrieveFieldIdException, FailedToRetrieveTeamIdException, FailedToRetrieveNextKeyFromSequenceException
     {
         // Validate parameters
         switch (parameters.size()) {
@@ -513,7 +513,7 @@ public class Application
             throw new TeamCantPlayAgainstItselfException(parameters.get(2));
         }
 
-        // Ex.: creerMatch Red_Sox Yankees 2000-01-01 08:00:00
+        // Ex.: creerMatch 2000-01-01 08:00:00 Red_Sox Yankees
 
         Match match = new Match();
 
@@ -522,6 +522,7 @@ public class Application
             throw new CannotFindTeamWithNameException(parameters.get(2));
         }
         match.setLocalTeam(local);
+        match.setField(local.getField(connectionWithDatabase));
 
         Team visitor = Team.getTeamWithName(connectionWithDatabase, parameters.get(3));
         if (visitor == null) {
@@ -535,56 +536,7 @@ public class Application
             match.save(connectionWithDatabase);
         } catch (FailedToSaveEntityException e) {
             Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
-        }
-    }
-
-    /**
-     * Retrieve the next ID for the given table name.
-     *
-     * @param tableName - Name of the table we want the next primary id.
-     * @param keyColumnName - Name of the column where is the primary key in the table given in the first parameter.
-     * @return int - ID to use.
-     * @throws FailedToRetrieveNextKeyFromSequenceException Thrown if there is a problem while retriving the next ID to use.
-     */
-    private synchronized int getNextIdForTable(String tableName, String keyColumnName) throws FailedToRetrieveNextKeyFromSequenceException
-    {
-        PreparedStatement statement = null;
-
-        try {
-            statement = connectionWithDatabase.prepareStatement("SELECT nextcle FROM sequence WHERE nomtable = ?;");
-            statement.setString(1, tableName);
-            ResultSet result = statement.executeQuery();
-
-            if (!result.next()) {
-                // Do not exists in the sequence table
-                closeStatement(statement);
-                statement = connectionWithDatabase.prepareStatement("INSERT INTO sequence (nomtable, nextcle) SELECT ? AS nomtable, (MAX(" + keyColumnName + ") + 1) AS nextcle FROM " + tableName + ";");
-                statement.setString(1, tableName);
-
-                statement.execute();
-                connectionWithDatabase.commit();
-                closeStatement(statement);
-
-                // Recurcivity because we now have an entry in this table.
-                return getNextIdForTable(tableName, keyColumnName);
-            }
-
-            int nextId = result.getInt("nextcle");
-            closeStatement(statement);
-
-            // Increment current value
-            statement = connectionWithDatabase.prepareStatement("UPDATE sequence SET nextcle = nextcle + 1 WHERE nomtable = ?;");
-            statement.setString(1, tableName);
-            statement.executeUpdate();
-            connectionWithDatabase.commit();
-
-            return nextId;
-
-        } catch (SQLException e) {
-            throw new FailedToRetrieveNextKeyFromSequenceException(tableName);
-
-        } finally {
-            closeStatement(statement);
+            e.printStackTrace();
         }
     }
 
