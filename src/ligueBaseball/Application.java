@@ -3,25 +3,32 @@ package ligueBaseball;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Scanner;
 
+import ligueBaseball.Logger.LOG_TYPE;
 import ligueBaseball.command.Command;
+import ligueBaseball.exceptions.CannotFindTeamWithNameException;
 import ligueBaseball.exceptions.CreatePlayerParametersMissingException;
 import ligueBaseball.exceptions.FailedToConnectToDatabaseException;
+import ligueBaseball.exceptions.FailedToRetrieveFieldIdException;
+import ligueBaseball.exceptions.FailedToRetrieveNextKeyFromSequenceException;
+import ligueBaseball.exceptions.FailedToRetrieveTeamIdException;
 import ligueBaseball.exceptions.FieldNameAlreadyTakenException;
 import ligueBaseball.exceptions.MissingCommandParameterException;
 import ligueBaseball.exceptions.PlayerAlreadyExistsException;
+import ligueBaseball.exceptions.TeamCantPlayAgainstItselfException;
 import ligueBaseball.exceptions.TeamIsNotEmptyException;
 import ligueBaseball.exceptions.TeamNameAlreadyTakenException;
 import ligueBaseball.exceptions.UnknownCommandException;
@@ -108,7 +115,7 @@ public class Application
 					executeCommand(command);
 				}
 			} catch(Exception e) {
-				System.out.println("Exception ("+e.getClass().getName()+"): " + e.getMessage() + " ");
+				Logger.error(LOG_TYPE.SYSTEM, e.getMessage() + "("+e.getClass().getName()+")");
 				//e.printStackTrace();
 			}
 		}
@@ -123,7 +130,7 @@ public class Application
 		Scanner scanner = new Scanner(System.in);
 		try {
 			System.out.print("$ ");
-			return Command.extractCommandFromString(scanner.nextLine());
+			return Command.extractCommandFromString(scanner.nextLine().trim());
 		} finally { 
 			// BUG dans Eclipse, si on le ferme ça va faire plein de null pointer exception.
 			// Ce bug n'est pas présent si on roule le programme en console.
@@ -355,8 +362,7 @@ public class Application
 			
 			// Check if we received any results
 			if(!result.isBeforeFirst()) {
-				System.out.println("Erreur: L'équipe '" + teamName + " n'existe pas ou n'a pas de joueur.");
-			}
+				Logger.error(LOG_TYPE.USER, "L'équipe %s n'existe pas ou n'a pas de joueur.", teamName);			}
 			while(result.next()) {
 				System.out.println(" -> " + result.getString("joueurprenom") + " " + result.getString("joueurnom") + " #" + result.getInt("joueurid"));
 			}
@@ -386,7 +392,7 @@ public class Application
 			ResultSet player = statement.executeQuery();
 			
 			if(!player.isBeforeFirst()) {
-				System.out.println("Erreur: Le joueur n'existe pas.");
+				Logger.error(LOG_TYPE.USER, "Le joueur '%s %s' n'existe pas.", parameters.get(1), parameters.get(0));
 				statement.close();
 			} else {
 				player.next();
@@ -419,7 +425,7 @@ public class Application
 				deleteParticipations.executeUpdate();
 			} catch(SQLException e) {
 				connectionWithDatabase.rollback();
-				System.out.println("Erreur: Problème lors du retrait du joueur dans la table 'participe'.");
+				Logger.error(LOG_TYPE.SYSTEM, "Problème lors du retrait du joueur dans la table 'participe'.");
 				return;
 			} finally {
 				deleteParticipations.close();
@@ -431,7 +437,7 @@ public class Application
 				deleteInTeam.executeUpdate();
 			} catch(SQLException e) {
 				connectionWithDatabase.rollback();
-				System.out.println("Erreur: Problème lors du retrait du joueur dans la table 'faitpartie'.");
+				Logger.error(LOG_TYPE.SYSTEM, "Problème lors du retrait du joueur dans la table 'faitpartie'.");
 				return;
 			} finally {
 				deleteInTeam.close();
@@ -443,7 +449,7 @@ public class Application
 				deleteJoueur.executeUpdate();
 			} catch(SQLException e) {
 				connectionWithDatabase.rollback();
-				System.out.println("Erreur: Problème lors du retrait du joueur dans la table 'joueur'.");
+				Logger.error(LOG_TYPE.SYSTEM, "Problème lors du retrait du joueur dans la table 'joueur'.");
 				return;
 			} finally {
 				deleteJoueur.close();
@@ -460,23 +466,134 @@ public class Application
 	/**
 	 * Ajouter un match, en calculant le MatchId automatiquement
 	 * @param parameters - <MatchDate> <MatchHeure> <EquipeNomLocal> <EquipeNomVisiteur>
+	 * @throws MissingCommandParameterException 
+	 * @throws TeamCantPlayAgainstItselfException 
+	 * @throws FailedToRetrieveFieldIdException 
+	 * @throws CannotFindTeamWithNameException 
+	 * @throws FailedToRetrieveTeamIdException 
+	 * @throws FailedToRetrieveNextKeyFromSequenceException 
 	 */
-	private void creerMatch(ArrayList<String> parameters) {
-		//TODO
+	private void creerMatch(ArrayList<String> parameters) throws MissingCommandParameterException, TeamCantPlayAgainstItselfException, CannotFindTeamWithNameException, FailedToRetrieveFieldIdException, FailedToRetrieveTeamIdException, FailedToRetrieveNextKeyFromSequenceException 
+	{
+		// Validate parameters
+		switch(parameters.size()) {
+			case 0:
+				throw new MissingCommandParameterException("creerMatch", "MatchDate");
+			case 1:
+				throw new MissingCommandParameterException("creerMatch", "MatchHeure");
+			case 2:
+				throw new MissingCommandParameterException("creerMatch", "EquipeNomLocal");
+			case 3:
+				throw new MissingCommandParameterException("creerMatch", "EquipeNomVisiteur");
+			default:
+				// Ok !
+		}
+		
+		// Verifications
+		if(parameters.get(2).equalsIgnoreCase(parameters.get(3))) {
+			throw new TeamCantPlayAgainstItselfException(parameters.get(2));
+		}
+		
+		//Ex.: creerMatch Red_Sox Yankees 2000-01-01 08:00:00
+		
+		int nextId = getNextIdForTable("match", "matchid");
+		
+		// Insert
+		PreparedStatement statement = null;
+		try {
+			statement = connectionWithDatabase.prepareStatement(
+					"INSERT INTO match (matchid, equipelocal, terrainid , equipevisiteur, matchdate, matchheure) "
+					+ "SELECT "
+					+ "? as matchid, "
+					+ "(SELECT equipeid FROM equipe WHERE equipenom = ?) AS equipevisiteur, "
+					+ "equipe.equipeid AS equipelocal, "
+					+ "equipe.terrainid AS terrainid, "
+					+ "? AS matchdate, "
+					+ "? AS matcheure "
+					+ "FROM equipe "
+					+ "WHERE equipenom = ?;");
+			statement.setInt(1, nextId);
+			statement.setString(2, parameters.get(1));
+			statement.setDate(3, Date.valueOf(parameters.get(2)));
+			statement.setTime(4, Time.valueOf(parameters.get(3)));
+			statement.setString(5, parameters.get(0));			
+			statement.execute();
+			connectionWithDatabase.commit();
+			
+		} catch(SQLException e) {
+			Logger.error(LOG_TYPE.SYSTEM, "Problème lors de la création du match.");
+			e.printStackTrace();
+		} finally {
+			closeStatement(statement);
+		}
+	}
+	
+	/**
+	 * Retrieve the next ID for the given table name.
+	 * @param tableName - Name of the table we want the next primary id.
+	 * @param keyColumnName - Name of the column where is the primary key in the table given in the first parameter.
+	 * @return int - ID to use.
+	 * @throws FailedToRetrieveNextKeyFromSequenceException Thrown if there is a problem while retriving the next ID to use.
+	 */
+	private int getNextIdForTable(String tableName, String keyColumnName) throws FailedToRetrieveNextKeyFromSequenceException
+	{
+		PreparedStatement statement = null;
+		try {
+			statement = connectionWithDatabase.prepareStatement("SELECT nextcle FROM sequence WHERE nomtable = ?;");
+			statement.setString(1, tableName);			
+			ResultSet result = statement.executeQuery();
+			
+			if(!result.next()) {
+				// Do not exists in the sequence table
+				closeStatement(statement);
+				statement = connectionWithDatabase.prepareStatement(
+						"INSERT INTO sequence (nomtable, nextcle) "
+						+ "SELECT "
+						+ "? AS nomtable, "
+						+ "(MAX("+keyColumnName+") + 1) AS nextcle "
+						+ "FROM "+tableName+";");
+				
+				statement.setString(1, tableName);				
+				statement.execute();
+				connectionWithDatabase.commit();
+				closeStatement(statement);
+				
+				// Recurcivity because we now have an entry in this table.
+				return getNextIdForTable(tableName, keyColumnName);
+			}
+			
+			int nextId = result.getInt("nextcle");
+			
+			// Increment current value
+			closeStatement(statement);
+			statement = connectionWithDatabase.prepareStatement("UPDATE sequence SET nextcle = nextcle + 1 WHERE nomtable = ?;");
+			statement.setString(1, tableName);
+			statement.executeUpdate();
+			connectionWithDatabase.commit();
+			
+			return nextId;
+			
+		} catch (SQLException e) {
+			throw new FailedToRetrieveNextKeyFromSequenceException(tableName);
+			
+		} finally {
+			closeStatement(statement);
+		}
 	}
 	
 	/**
 	 * Crée un nouvel arbitre, en calculant le ArbitreId automatiquement
 	 * @param parameters - <ArbitreNom> <ArbitrePrenom>
 	 */
-	private void creerArbitre(ArrayList<String> parameters) {
+	private void creerArbitre(ArrayList<String> parameters)
+	{
 		boolean trouver = false;
 		try {
 			PreparedStatement statement = connectionWithDatabase.prepareStatement("SELECT * FROM arbitre where arbitrenom ="
 					+ "'" + parameters.get(0) + "' and arbitreprenom = '" + parameters.get(1) + "';");
 			ResultSet arbitres = statement.executeQuery();
 			while(arbitres.next()) {
-				System.out.println("Erreur: l'arbitre existe d�j�.");
+				System.out.println("Erreur: l'arbitre existe déjà.");
 				trouver = true;
 			}
 			if(trouver == false){
@@ -491,7 +608,7 @@ public class Application
 				statement.executeUpdate();
 			}
 			statement.close();
-			System.out.println("Ajout fait avec succ�s.");
+			System.out.println("Ajout fait avec succès.");
 		} catch(SQLException e) {
 			System.out.println("Erreur: Problème lors de l'ajout dans la table 'arbitre'.");
 		}
@@ -511,7 +628,7 @@ public class Application
 			}
 			statement.close();
 		} catch(SQLException e) {
-			System.out.println("Erreur: Problème lors de la requ�te dans la table 'arbitre'.");
+			System.out.println("Erreur: Problème lors de la requête dans la table 'arbitre'.");
 		}
 	}
 	
@@ -561,10 +678,11 @@ public class Application
 								+ parameters.get(1) + "' and local.equipenom = '" + parameters.get(2)
 								+ "' and visiteur.equipenom = '"+ parameters.get(3) + "' ));");
 						statement.executeUpdate();
-						System.out.println("Ajout fait avec succ�s.");
+						connectionWithDatabase.commit();
+						System.out.println("Ajout fait avec succès.");
 					}
 					else{
-						System.out.println("Erreur: Il y a d�j� 4 arbitres pour ce match");
+						System.out.println("Erreur: Il y a déjà 4 arbitres pour ce match");
 					}
 					statement.close();
 				}
