@@ -20,6 +20,12 @@ public class Team extends DatabaseEntity
     String name;
     int fieldId = -1;
 
+    /**
+     * Get all the teams.
+     *
+     * @param databaseConnection
+     * @return List - All the teams.
+     */
     public static List<Team> getAllTeams(Connection databaseConnection)
     {
         List<Team> teamList = new ArrayList<>();
@@ -39,6 +45,13 @@ public class Team extends DatabaseEntity
         return teamList;
     }
 
+    /**
+     * Get the team with the given ID.
+     *
+     * @param databaseConnection
+     * @param id - ID of the team we want to retrieve.
+     * @return Team - If found, return entity, otherwise return null.
+     */
     public static Team getTeamWithId(Connection databaseConnection, int id)
     {
         PreparedStatement statement = null;
@@ -61,6 +74,13 @@ public class Team extends DatabaseEntity
         }
     }
 
+    /**
+     * Get the team with the given name.
+     *
+     * @param databaseConnection
+     * @param name - Name of the team we want to retrieve.
+     * @return Team - If found, return entity, otherwise return null.
+     */
     public static Team getTeamWithName(Connection databaseConnection, String name)
     {
         PreparedStatement statement = null;
@@ -216,7 +236,7 @@ public class Team extends DatabaseEntity
      * Add a new player in this team.
      *
      * @param databaseConnection
-     * @param player
+     * @param player - Player to add to team.
      * @throws FailedToSaveEntityException
      */
     public void addPlayer(Connection databaseConnection, Player player) throws FailedToSaveEntityException
@@ -245,6 +265,9 @@ public class Team extends DatabaseEntity
 
     /**
      * Remove a player from this team.
+     *
+     * @param databaseConnection
+     * @param player - Player to remove from team.
      */
     public void removePlayer(Connection databaseConnection, Player player)
     {
@@ -283,7 +306,7 @@ public class Team extends DatabaseEntity
     /**
      * Set the field related to this team.
      *
-     * @param field
+     * @param field - Field to associate with this team.
      * @throws FailedToSaveEntityException
      */
     public void setField(Connection databaseConnection, Field field) throws FailedToSaveEntityException
