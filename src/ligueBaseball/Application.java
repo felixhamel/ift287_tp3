@@ -38,7 +38,7 @@ public class Application
 	private ApplicationParameters parameters;
 	private Connection connectionWithDatabase;
 	private static HashMap<String, String> actions = new HashMap<>();
-	
+
 	static {
 		// Create all the available actions.
 		actions.put("creerEquipe", "<EquipeNom> [<NomTerrain> AdresseTerrain]");
@@ -54,16 +54,20 @@ public class Application
 		actions.put("entrerResultatMatch", "<MatchDate> <MatchHeure> <EquipeNomLocal> <EquipeNomVisiteur> <PointsLocal> <PointsVisiteur>");
 		actions.put("afficherResultatsDate", "[<APartirDate>]");
 		actions.put("afficherResultats", "[<EquipeNom>]");
-		
+
 		actions.put("aide", null);
 		actions.put("quitter", null);
 	}
 
+	/**
+	 * Constructor
+	 * @param parameters - ApplicationParameters
+	 */
 	public Application(ApplicationParameters parameters) 
 	{
 		this.parameters = parameters;
 	}
-	
+
 	/**
 	 * Open a connection with the database.
 	 * @throws FailedToConnectToDatabaseException 
@@ -81,7 +85,7 @@ public class Application
 			throw new FailedToConnectToDatabaseException(parameters.getDatabaseName(), e);
 		}
 	}
-	
+
 	/**
 	 * Close the opened connection with the database. Won't close it again if already closed.
 	 */
@@ -120,7 +124,7 @@ public class Application
 			}
 		}
 	}
-	
+
 	/**
 	 * Ask the player enter a command with parameters if needed.
 	 * @return Command - The requested command by the user.
@@ -137,7 +141,7 @@ public class Application
 			//scanner.close();
 		}
 	}
-	
+
 	/**
 	 * Execute the command with the informations given by the user.
 	 * @param command - Command requested by the user.
@@ -145,56 +149,56 @@ public class Application
 	private void executeCommand(Command command) throws Exception
 	{
 		switch(command.getCommandName()) {
-			case "creerEquipe":
-				createANewTeam(command.getParameters());
-				break;
-			case "afficherEquipes":
-				displayTeams();
-				break;
-			case "supprimerEquipe":
-				supprimerEquipe(command.getParameters());
-				break;
-			case "creerJoueur":
-				creerJoueur(command.getParameters());
-				break;
-			case "afficherJoueursEquipe":
-				afficherJoueursEquipe(command.getParameters());
-				break;
-			case "supprimerJoueur":
-				deletePlayer(command.getParameters());
-				break;
-			case "creerMatch":
-				creerMatch(command.getParameters());
-				break;
-			case "creerArbitre":
-				creerArbitre(command.getParameters());
-				break;
-			case "afficherArbitres":
-				afficherArbitres();
-				break;
-			case "arbitrerMatch":
-				arbitrerMatch(command.getParameters());
-				break;
-			case "entrerResultatMatch":
-				entrerResultatMatch(command.getParameters());
-				break;
-			case "afficherResultatsDate":
-				afficherResultatsDate(command.getParameters());
-				break;
-			case "afficherResultats":
-				afficherResultats(command.getParameters());
-				break;
-			case "aide":
-				showAvailableActions();
-				break;
-			case "quitter":
-				exitProgram();
-			default:
-				System.out.println("Commande non implémentée.");
-				break;
+		case "creerEquipe":
+			createANewTeam(command.getParameters());
+			break;
+		case "afficherEquipes":
+			displayTeams();
+			break;
+		case "supprimerEquipe":
+			supprimerEquipe(command.getParameters());
+			break;
+		case "creerJoueur":
+			creerJoueur(command.getParameters());
+			break;
+		case "afficherJoueursEquipe":
+			afficherJoueursEquipe(command.getParameters());
+			break;
+		case "supprimerJoueur":
+			deletePlayer(command.getParameters());
+			break;
+		case "creerMatch":
+			creerMatch(command.getParameters());
+			break;
+		case "creerArbitre":
+			creerArbitre(command.getParameters());
+			break;
+		case "afficherArbitres":
+			afficherArbitres();
+			break;
+		case "arbitrerMatch":
+			arbitrerMatch(command.getParameters());
+			break;
+		case "entrerResultatMatch":
+			entrerResultatMatch(command.getParameters());
+			break;
+		case "afficherResultatsDate":
+			afficherResultatsDate(command.getParameters());
+			break;
+		case "afficherResultats":
+			afficherResultats(command.getParameters());
+			break;
+		case "aide":
+			showAvailableActions();
+			break;
+		case "quitter":
+			exitProgram();
+		default:
+			System.out.println("Commande non implémentée.");
+			break;
 		}
 	}
-	
+
 	/**
 	 * Create a new team.
 	 * @param parameters - <EquipeNom> [<NomTerrain> AdresseTerrain]
@@ -227,7 +231,7 @@ public class Application
 					rs = statement.executeQuery(query);
 					update = "INSERT INTO equipe (equipenom, terrainid) VALUES ('" + parameters.get(1) + "', '" + rs.getString("terrainid") + ");";
 					statement.executeUpdate(update);
-					
+
 					connectionWithDatabase.commit();
 				}
 			}
@@ -236,7 +240,7 @@ public class Application
 			closeStatement(statement);
 		}
 	}
-	
+
 	/**
 	 * Display all the teams.
 	 */
@@ -255,7 +259,7 @@ public class Application
 			closeStatement(statement);
 		}
 	}
-	
+
 	/**
 	 * Supprimer une equipe
 	 * @param parameters - <EquipeNom>
@@ -281,7 +285,7 @@ public class Application
 			closeStatement(stmt);
 		}
 	}
-	
+
 	/**
 	 * Creer un joueur	
 	 * @param parameters - <JoueurNom> <JoueurPrenom> [<EquipeNom> <Numero> [<DateDbut>]]
@@ -317,7 +321,7 @@ public class Application
 			closeStatement(stmt);
 		}
 	}
-	
+
 	/**
 	 * Afficher la liste des joueurs
 	 * @param parameters - [<EquipeNom>]
@@ -342,7 +346,7 @@ public class Application
 			showAllPlayersForTeam(parameters.get(0));
 		}
 	}
-	
+
 	/**
 	 * Show all the players that plays for the team given in parameters.
 	 * @param teamName - Name of the Team.
@@ -352,14 +356,14 @@ public class Application
 		try {
 			PreparedStatement statement = connectionWithDatabase.prepareStatement(
 					"SELECT joueur.joueurnom, joueur.joueurprenom, joueur.joueurid "
-					+ "FROM faitpartie "
-					+ "INNER JOIN joueur ON faitpartie.joueurid = joueur.joueurid "
-					+ "INNER JOIN equipe ON faitpartie.equipeid = equipe.equipeid "
-					+ "WHERE equipe.equipenom = ? "
-					+ "ORDER BY equipe.equipeid ASC, faitpartie.numero ASC;");
+							+ "FROM faitpartie "
+							+ "INNER JOIN joueur ON faitpartie.joueurid = joueur.joueurid "
+							+ "INNER JOIN equipe ON faitpartie.equipeid = equipe.equipeid "
+							+ "WHERE equipe.equipenom = ? "
+							+ "ORDER BY equipe.equipeid ASC, faitpartie.numero ASC;");
 			statement.setString(1, teamName);
 			ResultSet result = statement.executeQuery();
-			
+
 			// Check if we received any results
 			if(!result.isBeforeFirst()) {
 				Logger.error(LOG_TYPE.USER, "L'équipe %s n'existe pas ou n'a pas de joueur.", teamName);			}
@@ -371,7 +375,7 @@ public class Application
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Delete a player and all informations related to it.
 	 * @param parameters - <JoueurNom> <JoueurPrenom>
@@ -384,13 +388,13 @@ public class Application
 		} else if(parameters.size() == 1) {
 			throw new MissingCommandParameterException("supprimerJoueur", "JoueurPrenom");
 		}
-		
+
 		try {
 			PreparedStatement statement = connectionWithDatabase.prepareStatement("SELECT joueurid FROM joueur WHERE joueurnom = ? AND joueurprenom = ?;");
 			statement.setString(1, parameters.get(0));
 			statement.setString(2, parameters.get(1));
 			ResultSet player = statement.executeQuery();
-			
+
 			if(!player.isBeforeFirst()) {
 				Logger.error(LOG_TYPE.USER, "Le joueur '%s %s' n'existe pas.", parameters.get(1), parameters.get(0));
 				statement.close();
@@ -398,7 +402,7 @@ public class Application
 				player.next();
 				int playerId = player.getInt("joueurid");
 				statement.close();
-				
+
 				// Confirmation
 				System.out.println("Êtes-vous certain de vouloir supprimer ce joueur ? (O/N) : ");
 				char confirmation = new BufferedReader(new InputStreamReader(System.in)).readLine().trim().charAt(0);
@@ -410,7 +414,7 @@ public class Application
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Delete a player from the database. It will remove all traces of it in plays and others.
 	 * @param playerId - ID of the player to delete.
@@ -418,7 +422,7 @@ public class Application
 	private void deletePlayerFromDatabase(int playerId) {
 		try {
 			connectionWithDatabase.setAutoCommit(false);
-		
+
 			PreparedStatement deleteParticipations = connectionWithDatabase.prepareStatement("DELETE FROM participe WHERE joueurid = ?;");
 			try {
 				deleteParticipations.setInt(1, playerId);
@@ -430,7 +434,7 @@ public class Application
 			} finally {
 				deleteParticipations.close();
 			}
-			
+
 			PreparedStatement deleteInTeam = connectionWithDatabase.prepareStatement("DELETE FROM faitpartie WHERE joueurid = ?;");
 			try {
 				deleteInTeam.setInt(1, playerId);
@@ -442,7 +446,7 @@ public class Application
 			} finally {
 				deleteInTeam.close();
 			}
-			
+
 			PreparedStatement deleteJoueur = connectionWithDatabase.prepareStatement("DELETE FROM joueur WHERE joueurid = ?;");
 			try {
 				deleteJoueur.setInt(1, playerId);
@@ -454,15 +458,15 @@ public class Application
 			} finally {
 				deleteJoueur.close();
 			}
-			
+
 			// Commit modifications
 			connectionWithDatabase.commit();
-			
+
 		} catch(SQLException e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Ajouter un match, en calculant le MatchId automatiquement
 	 * @param parameters - <MatchDate> <MatchHeure> <EquipeNomLocal> <EquipeNomVisiteur>
@@ -477,49 +481,50 @@ public class Application
 	{
 		// Validate parameters
 		switch(parameters.size()) {
-			case 0:
-				throw new MissingCommandParameterException("creerMatch", "MatchDate");
-			case 1:
-				throw new MissingCommandParameterException("creerMatch", "MatchHeure");
-			case 2:
-				throw new MissingCommandParameterException("creerMatch", "EquipeNomLocal");
-			case 3:
-				throw new MissingCommandParameterException("creerMatch", "EquipeNomVisiteur");
-			default:
-				// Ok !
+		case 0:
+			throw new MissingCommandParameterException("creerMatch", "MatchDate");
+		case 1:
+			throw new MissingCommandParameterException("creerMatch", "MatchHeure");
+		case 2:
+			throw new MissingCommandParameterException("creerMatch", "EquipeNomLocal");
+		case 3:
+			throw new MissingCommandParameterException("creerMatch", "EquipeNomVisiteur");
+		default:
+			// Ok !
 		}
-		
+
 		// Verifications
 		if(parameters.get(2).equalsIgnoreCase(parameters.get(3))) {
 			throw new TeamCantPlayAgainstItselfException(parameters.get(2));
 		}
-		
+
 		//Ex.: creerMatch Red_Sox Yankees 2000-01-01 08:00:00
-		
+
 		int nextId = getNextIdForTable("match", "matchid");
-		
+
 		// Insert
 		PreparedStatement statement = null;
 		try {
 			statement = connectionWithDatabase.prepareStatement(
 					"INSERT INTO match (matchid, equipelocal, terrainid , equipevisiteur, matchdate, matchheure) "
-					+ "SELECT "
-					+ "? as matchid, "
-					+ "(SELECT equipeid FROM equipe WHERE equipenom = ?) AS equipevisiteur, "
-					+ "equipe.equipeid AS equipelocal, "
-					+ "equipe.terrainid AS terrainid, "
-					+ "? AS matchdate, "
-					+ "? AS matcheure "
-					+ "FROM equipe "
-					+ "WHERE equipenom = ?;");
+							+ "SELECT "
+							+ "? as matchid, "
+							+ "(SELECT equipeid FROM equipe WHERE equipenom = ?) AS equipevisiteur, "
+							+ "equipe.equipeid AS equipelocal, "
+							+ "equipe.terrainid AS terrainid, "
+							+ "? AS matchdate, "
+							+ "? AS matcheure "
+							+ "FROM equipe "
+							+ "WHERE equipenom = ?;");
 			statement.setInt(1, nextId);
 			statement.setString(2, parameters.get(1));
 			statement.setDate(3, Date.valueOf(parameters.get(2)));
 			statement.setTime(4, Time.valueOf(parameters.get(3)));
-			statement.setString(5, parameters.get(0));			
+			statement.setString(5, parameters.get(0));
+
 			statement.execute();
 			connectionWithDatabase.commit();
-			
+
 		} catch(SQLException e) {
 			Logger.error(LOG_TYPE.SYSTEM, "Problème lors de la création du match.");
 			e.printStackTrace();
@@ -527,7 +532,7 @@ public class Application
 			closeStatement(statement);
 		}
 	}
-	
+
 	/**
 	 * Retrieve the next ID for the given table name.
 	 * @param tableName - Name of the table we want the next primary id.
@@ -535,103 +540,112 @@ public class Application
 	 * @return int - ID to use.
 	 * @throws FailedToRetrieveNextKeyFromSequenceException Thrown if there is a problem while retriving the next ID to use.
 	 */
-	private int getNextIdForTable(String tableName, String keyColumnName) throws FailedToRetrieveNextKeyFromSequenceException
+	private synchronized int getNextIdForTable(String tableName, String keyColumnName) throws FailedToRetrieveNextKeyFromSequenceException
 	{
 		PreparedStatement statement = null;
+
 		try {
 			statement = connectionWithDatabase.prepareStatement("SELECT nextcle FROM sequence WHERE nomtable = ?;");
 			statement.setString(1, tableName);			
 			ResultSet result = statement.executeQuery();
-			
+
 			if(!result.next()) {
 				// Do not exists in the sequence table
 				closeStatement(statement);
 				statement = connectionWithDatabase.prepareStatement(
-						"INSERT INTO sequence (nomtable, nextcle) "
-						+ "SELECT "
-						+ "? AS nomtable, "
-						+ "(MAX("+keyColumnName+") + 1) AS nextcle "
-						+ "FROM "+tableName+";");
-				
-				statement.setString(1, tableName);				
+						"INSERT INTO sequence (nomtable, nextcle) SELECT ? AS nomtable, (MAX("+keyColumnName+") + 1) AS nextcle FROM "+tableName+";");
+				statement.setString(1, tableName);
+
 				statement.execute();
 				connectionWithDatabase.commit();
 				closeStatement(statement);
-				
+
 				// Recurcivity because we now have an entry in this table.
 				return getNextIdForTable(tableName, keyColumnName);
 			}
-			
+
 			int nextId = result.getInt("nextcle");
-			
-			// Increment current value
 			closeStatement(statement);
+
+			// Increment current value
 			statement = connectionWithDatabase.prepareStatement("UPDATE sequence SET nextcle = nextcle + 1 WHERE nomtable = ?;");
 			statement.setString(1, tableName);
 			statement.executeUpdate();
 			connectionWithDatabase.commit();
-			
+
 			return nextId;
-			
+
 		} catch (SQLException e) {
 			throw new FailedToRetrieveNextKeyFromSequenceException(tableName);
-			
+
 		} finally {
 			closeStatement(statement);
 		}
 	}
-	
+
 	/**
 	 * Crée un nouvel arbitre, en calculant le ArbitreId automatiquement
 	 * @param parameters - <ArbitreNom> <ArbitrePrenom>
 	 */
 	private void creerArbitre(ArrayList<String> parameters)
 	{
-		boolean trouver = false;
+		PreparedStatement statement = null;
+
 		try {
-			PreparedStatement statement = connectionWithDatabase.prepareStatement("SELECT * FROM arbitre where arbitrenom ="
-					+ "'" + parameters.get(0) + "' and arbitreprenom = '" + parameters.get(1) + "';");
+			statement = connectionWithDatabase.prepareStatement("SELECT * FROM arbitre WHERE arbitrenom = ? AND arbitreprenom = ?;");
+			statement.setString(1, parameters.get(0));
+			statement.setString(2, parameters.get(1));
+
 			ResultSet arbitres = statement.executeQuery();
-			while(arbitres.next()) {
-				System.out.println("Erreur: l'arbitre existe déjà.");
-				trouver = true;
+			if(!arbitres.isBeforeFirst()) {
+				Logger.error(LOG_TYPE.USER, "L'arbitre existe déjà.");
+				return;
+			} else {
+				closeStatement(statement);
 			}
-			if(trouver == false){
-				statement = connectionWithDatabase.prepareStatement("SELECT arbitreid FROM arbitre order"
-						+ " by arbitreid desc limit 1;");
-				ResultSet arbitresid = statement.executeQuery();
-				arbitresid.next();
-				int arbitreid = arbitresid.getInt("arbitreid");
-				arbitreid ++;
-				statement = connectionWithDatabase.prepareStatement("insert into arbitre (arbitreid, arbitrenom, "
-						+ "arbitreprenom) values(" + arbitreid + ", '" + parameters.get(0) + "', '" + parameters.get(1) + "');");
-				statement.executeUpdate();
-			}
-			statement.close();
+
+			int nextId = getNextIdForTable("arbitre", "arbitreid");
+
+			statement = connectionWithDatabase.prepareStatement("INSERT INTO arbitre (arbitreid, arbitrenom, arbitreprenom) VALUES(?, ?, ?);");
+			statement.setInt(1, nextId);
+			statement.setString(2, parameters.get(0));
+			statement.setString(3, parameters.get(1));
+			statement.executeUpdate();
+
+			closeStatement(statement);
 			System.out.println("Ajout fait avec succès.");
-		} catch(SQLException e) {
-			System.out.println("Erreur: Problème lors de l'ajout dans la table 'arbitre'.");
+
+		} catch(Exception e) {
+			Logger.error(LOG_TYPE.SYSTEM, "Problème lors de l'ajout dans la table 'arbitre'.");
+
+		} finally {
+			closeStatement(statement);
 		}
 	}
-	
+
 	/**
 	 * Afficher la liste des arbitres en ordre alphabétique
 	 */
 	private void afficherArbitres() {
+		PreparedStatement statement = null;
+
 		try {
-			PreparedStatement statement = connectionWithDatabase.prepareStatement("SELECT arbitrenom, arbitreprenom FROM arbitre"
-					+ " order by arbitrenom;");
+			statement = connectionWithDatabase.prepareStatement("SELECT arbitrenom, arbitreprenom FROM arbitre ORDER BY arbitrenom;");
 			ResultSet arbitres = statement.executeQuery();
+
 			System.out.println("Les arbitres sont: ");
 			while(arbitres.next()) {
-				System.out.println(arbitres.getString("arbitrenom") + " " + arbitres.getString("arbitreprenom"));
+				System.out.println(String.format("%s %s", arbitres.getString("arbitrenom"), arbitres.getString("arbitreprenom")));
 			}
-			statement.close();
+
 		} catch(SQLException e) {
-			System.out.println("Erreur: Problème lors de la requête dans la table 'arbitre'.");
+			Logger.error(LOG_TYPE.SYSTEM, "Problème lors de la requête dans la table 'arbitre'.");
+
+		} finally {
+			closeStatement(statement);
 		}
 	}
-	
+
 	/**
 	 * Affecter des arbitres à un match
 	 * @param parameters - <MatchDate> <MatchHeure> <EquipeNomLocal> <EquipeNomVisiteur> <ArbitreNom> <ArbitrePrenom>
@@ -639,8 +653,9 @@ public class Application
 	private void arbitrerMatch(ArrayList<String> parameters) {
 		boolean trouver = false;
 		int nbrArbitres = 0;
+		PreparedStatement statement = null;
 		try {
-			PreparedStatement statement = connectionWithDatabase.prepareStatement("select matchid from match "
+			statement = connectionWithDatabase.prepareStatement("select matchid from match "
 					+ "left outer join equipe as local on local.equipeid = match.equipelocal "
 					+ "left outer join equipe as visiteur on visiteur.equipeid = match.equipevisiteur "
 					+ "where match.matchdate = '" + parameters.get(0) + "' and match.matchheure = '" + parameters.get(1) + "' and "
@@ -651,6 +666,7 @@ public class Application
 			}
 			if (trouver == true){
 				trouver = false;
+				closeStatement(statement);
 				statement = connectionWithDatabase.prepareStatement("SELECT * FROM arbitre where arbitrenom ="
 						+ "'" + parameters.get(4) + "' and arbitreprenom = '" + parameters.get(5) + "';");
 				ResultSet arbitre = statement.executeQuery();
@@ -658,6 +674,7 @@ public class Application
 					trouver = true;
 				}
 				if (trouver == true){
+					closeStatement(statement);
 					statement = connectionWithDatabase.prepareStatement("SELECT count(*) as nbr from arbitrer "
 							+ "left outer join match on match.matchid = arbitrer.matchid "
 							+ "left outer join equipe as local on local.equipeid = match.equipelocal "
@@ -669,6 +686,7 @@ public class Application
 						nbrArbitres = nbrarbitres.getInt("nbr");
 					}
 					if(nbrArbitres < 4){
+						closeStatement(statement);
 						statement = connectionWithDatabase.prepareStatement("INSERT INTO arbitrer(arbitreid, matchid) "
 								+ "VALUES ((SELECT arbitreid FROM arbitre where arbitrenom ="
 								+ "'" + parameters.get(4) + "' and arbitreprenom = '" + parameters.get(5) + "'), "
@@ -677,28 +695,27 @@ public class Application
 								+ "match.equipevisiteur where match.matchdate = '" + parameters.get(0) + "' and match.matchheure = '" 
 								+ parameters.get(1) + "' and local.equipenom = '" + parameters.get(2)
 								+ "' and visiteur.equipenom = '"+ parameters.get(3) + "' ));");
+
 						statement.executeUpdate();
 						connectionWithDatabase.commit();
-						System.out.println("Ajout fait avec succès.");
+						Logger.info(LOG_TYPE.SYSTEM, "Ajout fait avec succès.");
+
+					} else {
+						Logger.error(LOG_TYPE.USER, "Il y a déjà 4 arbitres pour ce match.");
 					}
-					else{
-						System.out.println("Erreur: Il y a déjà 4 arbitres pour ce match");
-					}
-					statement.close();
+				} else {
+					Logger.error(LOG_TYPE.USER, "L'arbitre n'existe pas.");
 				}
-				else{
-					System.out.println("Erreur: L'arbitre n'existe pas.");
-				}
+			} else {
+				Logger.error(LOG_TYPE.USER, "Le match n'existe pas.");
 			}
-			else{
-				System.out.println("Erreur: Le match n'existe pas.");
-			}
-			
 		} catch(SQLException e) {
-			System.out.println("Erreur: Problème lors de l'ajout dans la table 'arbitrer'.");
+			Logger.error(LOG_TYPE.SYSTEM, "Problème lors de l'ajout dans la table 'arbitrer'.");
+		} finally {
+			closeStatement(statement);
 		}
 	}
-	
+
 	/**
 	 * Entrer le résultat d'un match.
 	 * @param parameters - <MatchDate> <MatchHeure> <EquipeNomLocal> <EquipeNomVisiteur> <PointsLocal> <PointsVisiteur>
@@ -706,7 +723,7 @@ public class Application
 	private void entrerResultatMatch(ArrayList<String> parameters) {
 		//TODO
 	}
-	
+
 	/**
 	 * Afficher les résultats de tous les matchs
 	 * @param parameters - [<APartirDate>]
@@ -714,7 +731,7 @@ public class Application
 	private void afficherResultatsDate(ArrayList<String> parameters) {
 		//TODO
 	}
-	
+
 	/**
 	 * Afficher les résultats des matchs où une équipe a participé
 	 * @param parameters - [<EquipeNom>]
@@ -722,7 +739,7 @@ public class Application
 	private void afficherResultats(ArrayList<String> parameters) {
 		//TODO
 	}
-	
+
 	/**
 	 * Show all the available actions to the user.
 	 */
@@ -733,7 +750,7 @@ public class Application
 			System.out.println(" - " + entry.getKey() + " : " + entry.getValue());
 		}
 	}
-	
+
 	/**
 	 * Close the statement if not null
 	 * @param stmt - SQL statement
@@ -749,7 +766,7 @@ public class Application
 			}
 		}
 	}
-	
+
 	/**
 	 * Close connection with database and exit.
 	 */

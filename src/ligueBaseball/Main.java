@@ -24,7 +24,7 @@ public class Main
 	private static ApplicationParameters extractProgramParameters(String[] args) 
 	{
 		// Check if we at least have what we need to launch the program.
-		if (args.length < 4) {
+		if (args.length < 3) {
 			System.out.println("Missing or invalid program parameters. It should be like this :");
 			System.out.println("program [userId] [password] [dataBase] [entryFile]");
 			System.out.println("Without the [] !");
@@ -35,7 +35,10 @@ public class Main
 		parameters.setUsername(args[0]);
 		parameters.setPassword(args[1]);
 		parameters.setDatabaseName(args[2]);
-		parameters.setEntryFile(args[3]);
+		
+		if(args.length > 3) {
+			parameters.setEntryFile(args[3]);
+		}
 		
 		return parameters;
 	}
