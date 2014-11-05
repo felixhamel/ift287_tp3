@@ -14,6 +14,13 @@ public class Field extends DatabaseEntity
     String name;
     String address;
 
+    /**
+     * Get the field with the given ID.
+     *
+     * @param databaseConnection
+     * @param id - ID of the field.
+     * @return Field - If found, otherwise return null.
+     */
     public static Field getFieldWithId(Connection databaseConnection, int id)
     {
         PreparedStatement statement = null;
@@ -26,13 +33,7 @@ public class Field extends DatabaseEntity
             if (!fieldResult.next()) {
                 return null;
             }
-
-            Field field = new Field();
-            field.id = fieldResult.getInt("terrainid");
-            field.name = fieldResult.getString("terrainnom");
-            field.address = fieldResult.getString("terrainadresse");
-
-            return field;
+            return createFieldFromResultSet(fieldResult);
 
         } catch (SQLException e) {
             return null;
@@ -42,6 +43,13 @@ public class Field extends DatabaseEntity
         }
     }
 
+    /**
+     * Get the field with the given name.
+     *
+     * @param databaseConnection
+     * @param name - Name of the field.
+     * @return Field - If found, otherwise return null.
+     */
     public static Field getFieldWithName(Connection databaseConnection, String name)
     {
         PreparedStatement statement = null;
@@ -54,13 +62,7 @@ public class Field extends DatabaseEntity
             if (!fieldResult.next()) {
                 return null;
             }
-
-            Field field = new Field();
-            field.id = fieldResult.getInt("terrainid");
-            field.name = fieldResult.getString("terrainnom");
-            field.address = fieldResult.getString("terrainadresse");
-
-            return field;
+            return createFieldFromResultSet(fieldResult);
 
         } catch (SQLException e) {
             return null;
@@ -68,6 +70,16 @@ public class Field extends DatabaseEntity
         } finally {
             closeStatement(statement);
         }
+    }
+
+    private static Field createFieldFromResultSet(ResultSet resultSet) throws SQLException
+    {
+        Field field = new Field();
+        field.id = resultSet.getInt("terrainid");
+        field.name = resultSet.getString("terrainnom");
+        field.address = resultSet.getString("terrainadresse");
+
+        return field;
     }
 
     @Override
@@ -129,21 +141,41 @@ public class Field extends DatabaseEntity
         // Else the current field has never been created in the database before.
     }
 
+    /**
+     * Get the name of the field.
+     *
+     * @return String - Name of the field.
+     */
     public String getName()
     {
         return name;
     }
 
+    /**
+     * Set the name of the field.
+     *
+     * @param name - Name of the field.
+     */
     public void setName(String name)
     {
         this.name = name;
     }
 
+    /**
+     * Get the address of the field.
+     *
+     * @return String - Address of the field.
+     */
     public String getAddress()
     {
         return address;
     }
 
+    /**
+     * Set the address of the field.
+     *
+     * @param address - Address of the field.
+     */
     public void setAddress(String address)
     {
         this.address = address;

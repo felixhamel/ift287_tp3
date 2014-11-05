@@ -26,6 +26,50 @@ public class Match extends DatabaseEntity
     private int localTeamScore = 0;
     private int visitorTeamScore = 0;
 
+    /**
+     * Get the match that match with the given ID.
+     *
+     * @param databaseConnection
+     * @param id - ID of the match to find.
+     * @return Match - If found, otherwise return null.
+     */
+    public static Match getMatchWithId(Connection databaseConnection, int id)
+    {
+        PreparedStatement statement = null;
+
+        try {
+            statement = databaseConnection.prepareStatement("SELECT * FROM match WHERE matchid = ?;");
+            statement.setInt(1, id);
+
+            ResultSet matchResult = statement.executeQuery();
+            if (!matchResult.next()) {
+                return null;
+            }
+            return getEntityFromResultSet(matchResult);
+
+        } catch (SQLException e) {
+            return null;
+
+        } finally {
+            closeStatement(statement);
+        }
+    }
+
+    private static Match getEntityFromResultSet(ResultSet resultSet) throws SQLException
+    {
+        Match match = new Match();
+        match.id = resultSet.getInt("matchid");
+        match.localTeamId = resultSet.getInt("equipelocal");
+        match.visitorTeamId = resultSet.getInt("equipevisiteur");
+        match.fieldId = resultSet.getInt("terrainid");
+        match.date = resultSet.getDate("matchdate");
+        match.time = resultSet.getTime("matchheure");
+        match.localTeamScore = resultSet.getInt("pointslocal");
+        match.visitorTeamScore = resultSet.getInt("pointsvisiteur");
+
+        return match;
+    }
+
     @Override
     protected void create(Connection databaseConnection) throws FailedToSaveEntityException
     {
@@ -256,7 +300,7 @@ public class Match extends DatabaseEntity
 
     /**
      * Get the visitor team score.
-     * 
+     *
      * @return int - Visitor team score.
      */
     public final int getVisitorTeamScore()
@@ -266,7 +310,7 @@ public class Match extends DatabaseEntity
 
     /**
      * Set the visitor team score.
-     * 
+     *
      * @param visitorTeamScore - Visitor team score.
      */
     public void setVisitorTeamScore(int visitorTeamScore)
