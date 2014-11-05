@@ -178,6 +178,9 @@ public class Team extends DatabaseEntity
                 closeStatement(statement);
             }
         }
+        id = -1;
+        name = null;
+        fieldId = -1;
     }
 
     /**
