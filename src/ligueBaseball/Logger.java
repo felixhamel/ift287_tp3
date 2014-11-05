@@ -1,4 +1,4 @@
-package ligueBaseball.tools;
+package ligueBaseball;
 
 public class Logger
 {

@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import ligueBaseball.Logger;
+import ligueBaseball.Logger.LOG_TYPE;
 import ligueBaseball.exceptions.FailedToDeleteEntityException;
 import ligueBaseball.exceptions.FailedToRetrieveNextKeyFromSequenceException;
 import ligueBaseball.exceptions.FailedToRetrievePlayersOfTeamException;
@@ -20,16 +22,21 @@ public class Team extends DatabaseEntity
 
     public static List<Team> getAllTeams(Connection databaseConnection)
     {
+        List<Team> teamList = new ArrayList<>();
         PreparedStatement statement = null;
 
         try {
-            statement = databaseConnection.prepareStatement("");
+            statement = databaseConnection.prepareStatement("SELECT * FROM equipe;");
+            ResultSet teams = statement.executeQuery();
+            while (teams.next()) {
+                teamList.add(getEntityFromResultSet(teams));
+            }
         } catch (SQLException e) {
-
+            Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
         } finally {
             closeStatement(statement);
         }
-        return null;
+        return teamList;
     }
 
     public static Team getTeamWithId(Connection databaseConnection, int id)

@@ -20,6 +20,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Scanner;
 
+import ligueBaseball.Logger.LOG_TYPE;
 import ligueBaseball.command.Command;
 import ligueBaseball.entities.Team;
 import ligueBaseball.exceptions.CannotFindTeamWithNameException;
@@ -36,8 +37,6 @@ import ligueBaseball.exceptions.TeamCantPlayAgainstItselfException;
 import ligueBaseball.exceptions.TeamIsNotEmptyException;
 import ligueBaseball.exceptions.TeamNameAlreadyTakenException;
 import ligueBaseball.exceptions.UnknownCommandException;
-import ligueBaseball.tools.Logger;
-import ligueBaseball.tools.Logger.LOG_TYPE;
 
 public class Application
 {
