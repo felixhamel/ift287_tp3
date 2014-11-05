@@ -1,9 +1,9 @@
-package ligueBaseball;
+package ligueBaseball.tools;
 
 public class Logger
 {
-    enum LOG_TYPE {
-        USER("Utilisateur"), SYSTEM("Système"), OTHER("Autre");
+    public enum LOG_TYPE {
+        USER("Utilisateur"), SYSTEM("Système"), OTHER("Autre"), EXCEPTION("Exception"), COMMENT("Commentaire"), COMMAND("Commande");
 
         private final String value;
 
@@ -11,6 +11,7 @@ public class Logger
             this.value = value;
         }
 
+        @Override
         public String toString()
         {
             return value;

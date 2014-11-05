@@ -5,7 +5,7 @@ public class ApplicationParameters
     private String username;
     private String password;
     private String databaseName;
-    private String entryFile;
+    private String entryFile = ""; // Not NULL
 
     public String getUsername()
     {

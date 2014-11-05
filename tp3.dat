@@ -1,0 +1,80 @@
+--
+-- gestion d'equipes
+-- operations 1, 2 et 3
+afficherEquipes
+creerEquipe Mariners Safeco_Field 1st_Avenue_South
+afficherEquipes
+-- *********** cas d'erreur *********
+-- l'equipe existe deja
+creerEquipe Mariners Safeco_Field 1st_Avenue_South
+--
+supprimerEquipe Mariners
+afficherEquipes
+-- *********** cas d'erreur *********
+-- l'equipe a supprimer n'exite pas
+supprimerEquipe Mariners
+--
+--
+-- gestion de joueurs
+-- operations 4, 5 et 6
+afficherJoueursEquipe Yankees
+-- *********** cas d'erreur *********
+-- l'equipe n'existe pas
+afficherJoueursEquipe Mariners
+--
+creerJoueur Jackson Reggie Yankees 44
+afficherJoueursEquipe Yankees
+-- *********** cas d'erreur *********
+-- le joueur existe deja
+creerJoueur Jackson Reggie Yankees 44
+--
+-- *********** cas d'erreur *********
+-- la date n'est pas valide
+creerJoueur Monson Thurman Yankees 15 2003-15-24
+--
+afficherJoueursEquipe Yankees
+supprimerJoueur Jackson Reggie 
+afficherJoueursEquipe Yankees
+-- *********** cas d'erreur *********
+-- le joueur n'existe pas
+supprimerJoueur Jackson Reggie
+--
+-- gestion de matchs
+-- operation 7, 11, 12 et 13
+afficherResultats Yankees
+-- *********** cas d'erreur *********
+-- l'equipe n'existe pas
+afficherResultats Mariners
+--
+creerMatch 2008-01-20 20:00 Yankees Mets
+afficherResultats Yankees
+--
+-- *********** cas d'erreur *********
+-- l'equipe n'existe pas
+creerMatch 2008-01-20 20:00 Yankees Mariners
+--
+entrerResultatMatch 2008-01-20 20:00 Yankees Mets 4 2
+afficherResultats Yankees
+afficherResultats Mets
+afficherResultatsDate 2008-01-10
+-- *********** cas d'erreur *********
+-- la date n'est pas valide
+afficherResultatsDate 2008-15-24
+--
+-- gestion d'arbitres
+-- operation 8, 9 et 10
+afficherArbitres
+creerArbitre Rejean Tanguay
+-- *********** cas d'erreur *********
+-- l'arbitre existe deja
+creerArbitre Rejean Tanguay
+--
+--
+afficherArbitres
+arbitrerMatch 2008-01-20 20:00 Yankees Mets Rejean Tanguay
+afficherResultatsDate 2008-01-20
+--
+-- *********** cas d'erreur *********
+-- le match n'existe pas
+arbitrerMatch 2008-01-20 20:00 Yankees Mariners Rejean Tanguay
+--
