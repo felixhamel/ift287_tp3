@@ -45,6 +45,37 @@ public class Player extends DatabaseEntity
         }
     }
 
+    /**
+     * Get Player with firstname and lastname.
+     *
+     * @param databaseConnection
+     * @param firstName - First name of the player.
+     * @param lastName - Last name of the player.
+     * @return Player - If found, otherwise return null.
+     */
+    public static Player getPlayerWithName(Connection databaseConnection, String firstName, String lastName)
+    {
+        PreparedStatement statement = null;
+
+        try {
+            statement = databaseConnection.prepareStatement("SELECT joueur.joueurid, joueur.joueurprenom, joueur.joueurnom, faitpartie.numero, faitpartie.equipeid FROM joueur, faitpartie WHERE joueur.joueurprenom = ? AND joueur.joueurnom = ?;");
+            statement.setString(1, firstName);
+            statement.setString(2, lastName);
+
+            ResultSet fieldResult = statement.executeQuery();
+            if (!fieldResult.next()) {
+                return null;
+            }
+            return createFieldFromResultSet(fieldResult);
+
+        } catch (SQLException e) {
+            return null;
+
+        } finally {
+            closeStatement(statement);
+        }
+    }
+
     private static Player createFieldFromResultSet(ResultSet resultSet) throws SQLException
     {
         Player player = new Player();

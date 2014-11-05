@@ -3,7 +3,6 @@ package ligueBaseball;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.Date;
@@ -22,6 +21,8 @@ import java.util.Scanner;
 
 import ligueBaseball.Logger.LOG_TYPE;
 import ligueBaseball.command.Command;
+import ligueBaseball.entities.Field;
+import ligueBaseball.entities.Player;
 import ligueBaseball.entities.Team;
 import ligueBaseball.exceptions.CannotFindTeamWithNameException;
 import ligueBaseball.exceptions.CreatePlayerParametersMissingException;
@@ -29,8 +30,9 @@ import ligueBaseball.exceptions.FailedToConnectToDatabaseException;
 import ligueBaseball.exceptions.FailedToDeleteEntityException;
 import ligueBaseball.exceptions.FailedToRetrieveFieldIdException;
 import ligueBaseball.exceptions.FailedToRetrieveNextKeyFromSequenceException;
+import ligueBaseball.exceptions.FailedToRetrievePlayersOfTeamException;
 import ligueBaseball.exceptions.FailedToRetrieveTeamIdException;
-import ligueBaseball.exceptions.FieldNameAlreadyTakenException;
+import ligueBaseball.exceptions.FailedToSaveEntityException;
 import ligueBaseball.exceptions.MissingCommandParameterException;
 import ligueBaseball.exceptions.PlayerAlreadyExistsException;
 import ligueBaseball.exceptions.TeamCantPlayAgainstItselfException;
@@ -204,7 +206,7 @@ public class Application
                 displayTeams();
                 break;
             case "supprimerEquipe":
-                supprimerEquipe(command.getParameters());
+                deleteTeam(command.getParameters());
                 break;
             case "creerJoueur":
                 creerJoueur(command.getParameters());
@@ -251,40 +253,40 @@ public class Application
      * Create a new team.
      *
      * @param parameters - <EquipeNom> [<NomTerrain> AdresseTerrain]
+     * @throws FailedToSaveEntityException
+     * @throws MissingCommandParameterException
+     * @throws TeamNameAlreadyTakenException
      */
-    private void createTeam(ArrayList<String> parameters) throws SQLException, TeamNameAlreadyTakenException, FieldNameAlreadyTakenException
+    private void createTeam(ArrayList<String> parameters) throws FailedToSaveEntityException, MissingCommandParameterException, TeamNameAlreadyTakenException
     {
-        Statement statement = null;
-        String query = "SELECT equipenom FROM equipe WHERE equipenom = '" + parameters.get(1) + "';";
-        try {
-            statement = connectionWithDatabase.createStatement();
-            ResultSet rs = statement.executeQuery(query);
-            if (rs.next()) {
-                throw new TeamNameAlreadyTakenException(parameters.get(1));
-            } else {
-                query = "SELECT * FROM terrain WHERE terrainnom = '" + parameters.get(2) + "';";
-                rs = statement.executeQuery(query);
-                if (rs.next()) {
-                    throw new FieldNameAlreadyTakenException(parameters.get(2));
-                } else {
-                    String update = null;
-                    if (parameters.get(3) != null) {
-                        update = "INSERT INTO terrain (terrainnom, terrainadresse) VALUES ('" + parameters.get(2) + "', '" + parameters.get(3) + "');";
-                    } else {
-                        update = "INSERT INTO terrain (terrainnom) VALUES ('" + parameters.get(2) + "');";
-                    }
-                    statement.executeUpdate(update);
-                    query = "SELECT terrainid FROM terrain WHERE terrainnom = '" + parameters.get(2) + "';";
-                    rs = statement.executeQuery(query);
-                    update = "INSERT INTO equipe (equipenom, terrainid) VALUES ('" + parameters.get(1) + "', '" + rs.getString("terrainid") + ");";
-                    statement.executeUpdate(update);
-
-                    connectionWithDatabase.commit();
-                }
-            }
-        } finally {
-            closeStatement(statement);
+        if (parameters.size() < 1) {
+            throw new MissingCommandParameterException("creerEquipe", "EquipeNom");
         }
+
+        // Prepare field
+        Field field = null;
+        if (parameters.size() > 1) {
+            // Check if field already exists
+            field = Field.getFieldWithName(connectionWithDatabase, parameters.get(1));
+            if (field == null) {
+                field = new Field();
+                field.setName(parameters.get(1));
+                if (parameters.size() > 2) {
+                    field.setAddress(parameters.get(2));
+                }
+                field.save(connectionWithDatabase);
+            }
+        }
+
+        // Check if team already exists
+        Team team = Team.getTeamWithName(connectionWithDatabase, parameters.get(0));
+        if (team != null) {
+            throw new TeamNameAlreadyTakenException(parameters.get(0));
+        }
+        team = new Team();
+        team.setName(parameters.get(0));
+        team.setField(connectionWithDatabase, field);
+        team.save(connectionWithDatabase);
     }
 
     /**
@@ -299,15 +301,25 @@ public class Application
     }
 
     /**
-     * Supprimer une equipe
+     * Delete a team.
      *
      * @param parameters - <EquipeNom>
      * @throws FailedToDeleteEntityException
+     * @throws MissingCommandParameterException
      * @throws NumberFormatException
      */
-    private void supprimerEquipe(ArrayList<String> parameters) throws TeamIsNotEmptyException, FailedToDeleteEntityException
+    private void deleteTeam(ArrayList<String> parameters) throws TeamIsNotEmptyException, FailedToDeleteEntityException, MissingCommandParameterException
     {
-        Team.getTeamWithName(connectionWithDatabase, parameters.get(0)).delete(connectionWithDatabase);
+        if (parameters.size() < 1) {
+            throw new MissingCommandParameterException("supprimerEquipe", "EquipeNom");
+        }
+
+        Team team = Team.getTeamWithName(connectionWithDatabase, parameters.get(0));
+        if (team == null) {
+            Logger.error(LOG_TYPE.USER, "L'équipe %s n'existe pas.", parameters.get(0));
+        } else {
+            team.delete(connectionWithDatabase);
+        }
     }
 
     /**
@@ -355,17 +367,9 @@ public class Application
     private void afficherJoueursEquipe(ArrayList<String> parameters)
     {
         if (parameters.isEmpty()) {
-            try {
-                // Go get all the teams
-                PreparedStatement statement = connectionWithDatabase.prepareStatement("SELECT * FROM equipe");
-                ResultSet teams = statement.executeQuery();
-                while (teams.next()) {
-                    System.out.println("Équipe: " + teams.getString("equipenom"));
-                    showAllPlayersForTeam(teams.getString("equipenom"));
-                }
-                statement.close();
-            } catch (SQLException e) {
-                Logger.error(LOG_TYPE.SYSTEM, "Problème lors de la lecture des joueurs de/des équipes.");
+            List<Team> teams = Team.getAllTeams(connectionWithDatabase);
+            for (Team team : teams) {
+                showAllPlayersForTeam(team.getName());
             }
         } else {
             showAllPlayersForTeam(parameters.get(0));
@@ -376,25 +380,22 @@ public class Application
      * Show all the players that plays for the team given in parameters.
      *
      * @param teamName - Name of the Team.
+     * @throws FailedToRetrievePlayersOfTeamException
      */
     private void showAllPlayersForTeam(String teamName)
     {
         try {
-            PreparedStatement statement = connectionWithDatabase.prepareStatement("SELECT joueur.joueurnom, joueur.joueurprenom, joueur.joueurid " + "FROM faitpartie " + "INNER JOIN joueur ON faitpartie.joueurid = joueur.joueurid " + "INNER JOIN equipe ON faitpartie.equipeid = equipe.equipeid " + "WHERE equipe.equipenom = ? "
-                    + "ORDER BY equipe.equipeid ASC, faitpartie.numero ASC;");
-            statement.setString(1, teamName);
-            ResultSet result = statement.executeQuery();
-
-            // Check if we received any results
-            if (!result.isBeforeFirst()) {
+            Team team = Team.getTeamWithName(connectionWithDatabase, teamName);
+            if (team == null) {
                 Logger.error(LOG_TYPE.USER, "L'équipe %s n'existe pas ou n'a pas de joueur.", teamName);
+            } else {
+                System.out.println(String.format("Équipe: %s", team.getName()));
+                for (Player player : team.getPlayers(connectionWithDatabase)) {
+                    System.out.println(String.format(" -> %s %s #%d", player.getFirstName(), player.getLastName(), player.getNumber()));
+                }
             }
-            while (result.next()) {
-                System.out.println(" -> " + result.getString("joueurprenom") + " " + result.getString("joueurnom") + " #" + result.getInt("joueurid"));
-            }
-            statement.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (FailedToRetrievePlayersOfTeamException e) {
+            Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
         }
     }
 
@@ -411,30 +412,20 @@ public class Application
         } else if (parameters.size() == 1) {
             throw new MissingCommandParameterException("supprimerJoueur", "JoueurPrenom");
         }
-
-        try {
-            PreparedStatement statement = connectionWithDatabase.prepareStatement("SELECT joueurid FROM joueur WHERE joueurnom = ? AND joueurprenom = ?;");
-            statement.setString(1, parameters.get(0));
-            statement.setString(2, parameters.get(1));
-            ResultSet player = statement.executeQuery();
-
-            if (!player.isBeforeFirst()) {
-                Logger.error(LOG_TYPE.USER, "Le joueur '%s %s' n'existe pas.", parameters.get(1), parameters.get(0));
-                statement.close();
-            } else {
-                player.next();
-                int playerId = player.getInt("joueurid");
-                statement.close();
-
+        Player player = Player.getPlayerWithName(connectionWithDatabase, parameters.get(1), parameters.get(0));
+        if (player == null) {
+            Logger.error(LOG_TYPE.USER, "Le joueur '%s %s' n'existe pas.", parameters.get(1), parameters.get(0));
+        } else {
+            try {
                 // Confirmation
                 System.out.println("Êtes-vous certain de vouloir supprimer ce joueur ? (O/N) : ");
                 char confirmation = new BufferedReader(new InputStreamReader(System.in)).readLine().trim().charAt(0);
                 if (confirmation == 'o' || confirmation == 'O') {
-                    deletePlayerFromDatabase(playerId);
+                    deletePlayerFromDatabase(player);
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -442,15 +433,16 @@ public class Application
      * Delete a player from the database. It will remove all traces of it in plays and others.
      *
      * @param playerId - ID of the player to delete.
+     * @throws FailedToDeleteEntityException
      */
-    private void deletePlayerFromDatabase(int playerId)
+    private void deletePlayerFromDatabase(Player player) throws FailedToDeleteEntityException
     {
         try {
             connectionWithDatabase.setAutoCommit(false);
 
             PreparedStatement deleteParticipations = connectionWithDatabase.prepareStatement("DELETE FROM participe WHERE joueurid = ?;");
             try {
-                deleteParticipations.setInt(1, playerId);
+                deleteParticipations.setInt(1, player.getId());
                 deleteParticipations.executeUpdate();
             } catch (SQLException e) {
                 connectionWithDatabase.rollback();
@@ -462,7 +454,7 @@ public class Application
 
             PreparedStatement deleteInTeam = connectionWithDatabase.prepareStatement("DELETE FROM faitpartie WHERE joueurid = ?;");
             try {
-                deleteInTeam.setInt(1, playerId);
+                deleteInTeam.setInt(1, player.getId());
                 deleteInTeam.executeUpdate();
             } catch (SQLException e) {
                 connectionWithDatabase.rollback();
@@ -472,20 +464,10 @@ public class Application
                 deleteInTeam.close();
             }
 
-            PreparedStatement deleteJoueur = connectionWithDatabase.prepareStatement("DELETE FROM joueur WHERE joueurid = ?;");
-            try {
-                deleteJoueur.setInt(1, playerId);
-                deleteJoueur.executeUpdate();
-            } catch (SQLException e) {
-                connectionWithDatabase.rollback();
-                Logger.error(LOG_TYPE.SYSTEM, "Problème lors du retrait du joueur dans la table 'joueur'.");
-                return;
-            } finally {
-                deleteJoueur.close();
-            }
-
             // Commit modifications
             connectionWithDatabase.commit();
+
+            player.delete(connectionWithDatabase);
 
         } catch (SQLException e) {
             e.printStackTrace();

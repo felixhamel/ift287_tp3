@@ -4,6 +4,10 @@ public class FailedToDeleteEntityException extends Exception
 {
     private static final long serialVersionUID = 2048533964955399849L;
 
+    public FailedToDeleteEntityException(String message) {
+        super(message);
+    }
+
     public FailedToDeleteEntityException(String message, Throwable cause) {
         super(message, cause);
     }

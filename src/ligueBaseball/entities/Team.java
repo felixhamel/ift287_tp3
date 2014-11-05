@@ -314,9 +314,11 @@ public class Team extends DatabaseEntity
      */
     public void setField(Connection databaseConnection, Field field) throws FailedToSaveEntityException
     {
-        if (field.id < 0) { // Field haven't been created yet
-            field.save(databaseConnection);
+        if (field != null) {
+            if (field.id < 0) { // Field haven't been created yet
+                field.save(databaseConnection);
+            }
+            fieldId = field.id;
         }
-        fieldId = field.id;
     }
 }
