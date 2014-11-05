@@ -28,8 +28,9 @@ public class Player extends DatabaseEntity
         PreparedStatement statement = null;
 
         try {
-            statement = databaseConnection.prepareStatement("SELECT joueur.joueurid, joueur.joueurprenom, joueur.joueurnom, faitpartie.numero, faitpartie.equipeid FROM joueur, faitpartie WHERE joueur.joueurid = ?;");
+            statement = databaseConnection.prepareStatement("SELECT joueur.joueurid, joueur.joueurprenom, joueur.joueurnom, faitpartie.numero, faitpartie.equipeid FROM joueur INNER JOIN faitpartie ON faitpartie.joueurid = ? WHERE joueur.joueurid = ?;");
             statement.setInt(1, id);
+            statement.setInt(2, id);
 
             ResultSet fieldResult = statement.executeQuery();
             if (!fieldResult.next()) {
@@ -58,7 +59,7 @@ public class Player extends DatabaseEntity
         PreparedStatement statement = null;
 
         try {
-            statement = databaseConnection.prepareStatement("SELECT joueur.joueurid, joueur.joueurprenom, joueur.joueurnom, faitpartie.numero, faitpartie.equipeid FROM joueur, faitpartie WHERE joueur.joueurprenom = ? AND joueur.joueurnom = ?;");
+            statement = databaseConnection.prepareStatement("SELECT joueur.joueurid, joueur.joueurprenom, joueur.joueurnom, faitpartie.numero, faitpartie.equipeid FROM joueur INNER JOIN faitpartie ON faitpartie.joueurid = joueur.joueurid WHERE joueur.joueurprenom = ? AND joueur.joueurnom = ?;");
             statement.setString(1, firstName);
             statement.setString(2, lastName);
 

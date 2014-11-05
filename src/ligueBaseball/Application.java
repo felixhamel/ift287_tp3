@@ -387,11 +387,16 @@ public class Application
         try {
             Team team = Team.getTeamWithName(connectionWithDatabase, teamName);
             if (team == null) {
-                Logger.error(LOG_TYPE.USER, "L'équipe %s n'existe pas ou n'a pas de joueur.", teamName);
+                Logger.error(LOG_TYPE.USER, "L'équipe %s n'existe pas.", teamName);
             } else {
                 System.out.println(String.format("Équipe: %s", team.getName()));
-                for (Player player : team.getPlayers(connectionWithDatabase)) {
-                    System.out.println(String.format(" -> %s %s #%d", player.getFirstName(), player.getLastName(), player.getNumber()));
+                List<Player> players = team.getPlayers(connectionWithDatabase);
+                if (players.isEmpty()) {
+                    System.out.println(" -> Aucun joueur ne fait partie de cette équipe.");
+                } else {
+                    for (Player player : players) {
+                        System.out.println(String.format(" -> %s %s #%s", player.getFirstName(), player.getLastName(), player.getNumber()));
+                    }
                 }
             }
         } catch (FailedToRetrievePlayersOfTeamException e) {
