@@ -44,6 +44,37 @@ public class Official extends DatabaseEntity
         }
     }
 
+    /**
+     * Get the official with the given name.
+     *
+     * @param databaseConnection
+     * @param firstName - First name of the official.
+     * @param lastName - Last name of the official.
+     * @return Official - If found, otherwise return null.
+     */
+    public static Official getOfficialWithName(Connection databaseConnection, String firstName, String lastName)
+    {
+        PreparedStatement statement = null;
+
+        try {
+            statement = databaseConnection.prepareStatement("SELECT * FROM arbitre WHERE arbitreprenom = ? AND arbitrenom = ?;");
+            statement.setString(1, firstName);
+            statement.setString(2, lastName);
+
+            ResultSet officialResult = statement.executeQuery();
+            if (!officialResult.next()) {
+                return null;
+            }
+            return getEntityFromResultSet(officialResult);
+
+        } catch (SQLException e) {
+            return null;
+
+        } finally {
+            closeStatement(statement);
+        }
+    }
+
     protected static Official getEntityFromResultSet(ResultSet resultSet) throws SQLException
     {
         Official entity = new Official();
@@ -98,9 +129,9 @@ public class Official extends DatabaseEntity
     {
         /*
          * f (id >= 0) { PreparedStatement statement = null; try { statement = databaseConnection.prepareStatement("DELETE arbitre"); }
-         * 
+         *
          * }
-         * 
+         *
          * firstName = null; lastName = null;
          */
         throw new NotImplementedException(); // Not needed for the moment

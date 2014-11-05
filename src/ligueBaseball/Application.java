@@ -22,6 +22,8 @@ import java.util.Scanner;
 import ligueBaseball.Logger.LOG_TYPE;
 import ligueBaseball.command.Command;
 import ligueBaseball.entities.Field;
+import ligueBaseball.entities.Match;
+import ligueBaseball.entities.Official;
 import ligueBaseball.entities.Player;
 import ligueBaseball.entities.Team;
 import ligueBaseball.exceptions.CannotFindTeamWithNameException;
@@ -513,27 +515,26 @@ public class Application
 
         // Ex.: creerMatch Red_Sox Yankees 2000-01-01 08:00:00
 
-        int nextId = getNextIdForTable("match", "matchid");
+        Match match = new Match();
 
-        // Insert
-        PreparedStatement statement = null;
+        Team local = Team.getTeamWithName(connectionWithDatabase, parameters.get(2));
+        if (local == null) {
+            throw new CannotFindTeamWithNameException(parameters.get(2));
+        }
+        match.setLocalTeam(local);
+
+        Team visitor = Team.getTeamWithName(connectionWithDatabase, parameters.get(3));
+        if (visitor == null) {
+            throw new CannotFindTeamWithNameException(parameters.get(3));
+        }
+        match.setVisitorTeam(visitor);
+
+        match.setDate(Date.valueOf(parameters.get(0)));
+        match.setTime(Time.valueOf(parameters.get(1)));
         try {
-            statement = connectionWithDatabase.prepareStatement("INSERT INTO match (matchid, equipelocal, terrainid , equipevisiteur, matchdate, matchheure) " + "SELECT " + "? as matchid, " + "(SELECT equipeid FROM equipe WHERE equipenom = ?) AS equipevisiteur, " + "equipe.equipeid AS equipelocal, " + "equipe.terrainid AS terrainid, "
-                    + "? AS matchdate, " + "? AS matcheure " + "FROM equipe " + "WHERE equipenom = ?;");
-            statement.setInt(1, nextId);
-            statement.setString(2, parameters.get(1));
-            statement.setDate(3, Date.valueOf(parameters.get(2)));
-            statement.setTime(4, Time.valueOf(parameters.get(3)));
-            statement.setString(5, parameters.get(0));
-
-            statement.execute();
-            connectionWithDatabase.commit();
-
-        } catch (SQLException e) {
-            Logger.error(LOG_TYPE.SYSTEM, "Problème lors de la création du match.");
-            e.printStackTrace();
-        } finally {
-            closeStatement(statement);
+            match.save(connectionWithDatabase);
+        } catch (FailedToSaveEntityException e) {
+            Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
         }
     }
 
@@ -591,40 +592,27 @@ public class Application
      * Crée un nouvel arbitre, en calculant le ArbitreId automatiquement
      *
      * @param parameters - <ArbitreNom> <ArbitrePrenom>
+     * @throws MissingCommandParameterException
+     * @throws FailedToSaveEntityException
      */
-    private void creerArbitre(ArrayList<String> parameters)
+    private void creerArbitre(ArrayList<String> parameters) throws MissingCommandParameterException, FailedToSaveEntityException
     {
-        PreparedStatement statement = null;
+        if (parameters.isEmpty()) {
+            throw new MissingCommandParameterException("creerArbitre", "ArbitreNom");
+        } else if (parameters.size() == 1) {
+            throw new MissingCommandParameterException("creerArbitre", "ArbitrePrenom");
+        }
 
-        try {
-            statement = connectionWithDatabase.prepareStatement("SELECT * FROM arbitre WHERE arbitrenom = ? AND arbitreprenom = ?;");
-            statement.setString(1, parameters.get(0));
-            statement.setString(2, parameters.get(1));
-
-            ResultSet arbitres = statement.executeQuery();
-            if (!arbitres.isBeforeFirst()) {
-                Logger.error(LOG_TYPE.USER, "L'arbitre existe déjà.");
-                return;
-            } else {
-                closeStatement(statement);
-            }
-
-            int nextId = getNextIdForTable("arbitre", "arbitreid");
-
-            statement = connectionWithDatabase.prepareStatement("INSERT INTO arbitre (arbitreid, arbitrenom, arbitreprenom) VALUES(?, ?, ?);");
-            statement.setInt(1, nextId);
-            statement.setString(2, parameters.get(0));
-            statement.setString(3, parameters.get(1));
-            statement.executeUpdate();
-
-            closeStatement(statement);
-            System.out.println("Ajout fait avec succès.");
-
-        } catch (Exception e) {
-            Logger.error(LOG_TYPE.SYSTEM, "Problème lors de l'ajout dans la table 'arbitre'.");
-
-        } finally {
-            closeStatement(statement);
+        // Check if this official already exists
+        Official official = Official.getOfficialWithName(connectionWithDatabase, parameters.get(1), parameters.get(0));
+        if (official != null) {
+            Logger.error(LOG_TYPE.USER, "L'arbitre existe déjà.");
+        } else {
+            official = new Official();
+            official.setFirstName(parameters.get(1));
+            official.setLastName(parameters.get(0));
+            official.save(connectionWithDatabase);
+            Logger.info(LOG_TYPE.SYSTEM, "Ajout fait avec succès.");
         }
     }
 
