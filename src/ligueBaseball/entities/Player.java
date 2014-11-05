@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Date;
 
 import ligueBaseball.exceptions.FailedToDeleteEntityException;
 import ligueBaseball.exceptions.FailedToRetrieveNextKeyFromSequenceException;
@@ -15,6 +16,8 @@ public class Player extends DatabaseEntity
     String firstName;
     int number = -1;
     int teamId = -1;
+    Date beginDate = new Date();
+    Date endDate = new Date();
 
     /**
      * Get the player with the given ID.
@@ -86,6 +89,7 @@ public class Player extends DatabaseEntity
         player.lastName = resultSet.getString("joueurnom");
         player.number = resultSet.getInt("numero");
         player.teamId = resultSet.getInt("equipeid");
+        player.beginDate = resultSet.getDate("dateDebut");
 
         return player;
     }
@@ -234,5 +238,21 @@ public class Player extends DatabaseEntity
     public void setNumber(int number)
     {
         this.number = number;
+    }
+    
+    /**
+     * Get the beginning date.
+     * @return - Beginning date.
+     */
+    public Date getBeginningDate() {
+    	return beginDate;
+    }
+    
+    /**
+     * Set the beginning date.
+     * @param date - Beginning date.
+     */
+    public void setDate(Date date) {
+    	this.beginDate = date;
     }
 }

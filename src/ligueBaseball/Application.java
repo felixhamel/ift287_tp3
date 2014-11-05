@@ -12,9 +12,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Scanner;
@@ -36,6 +39,7 @@ import ligueBaseball.exceptions.FailedToSaveEntityException;
 import ligueBaseball.exceptions.MissingCommandParameterException;
 import ligueBaseball.exceptions.PlayerAlreadyExistsException;
 import ligueBaseball.exceptions.TeamCantPlayAgainstItselfException;
+import ligueBaseball.exceptions.TeamDoesntExistException;
 import ligueBaseball.exceptions.TeamIsNotEmptyException;
 import ligueBaseball.exceptions.TeamNameAlreadyTakenException;
 import ligueBaseball.exceptions.UnknownCommandException;
@@ -323,38 +327,41 @@ public class Application
     }
 
     /**
-     * Creer un joueur
-     *
+     * Create a player
      * @param parameters - <JoueurNom> <JoueurPrenom> [<EquipeNom> <Numero> [<DateDbut>]]
+     * @throws MissingCommandParameterException
+     * @throws TeamDoesntExistException
+     * @throws FailedToSaveEntityException
+     * @throws ParseException 
      */
-    private void creerJoueur(ArrayList<String> parameters) throws SQLException, CreatePlayerParametersMissingException, PlayerAlreadyExistsException
+    private void creerJoueur(ArrayList<String> parameters) throws MissingCommandParameterException, TeamDoesntExistException, FailedToSaveEntityException, NullPointerException, IllegalArgumentException, ParseException
     {
-        if (parameters.get(3) != null || parameters.get(4) != null) {
-            if (parameters.get(3) == null || parameters.get(4) == null) {
-                throw new CreatePlayerParametersMissingException();
+    	if (parameters.get(3) != null || parameters.get(4) != null) {
+    		
+    		//If param 3 or 4 exists, then they both can't be null
+    		if (parameters.get(3) == null) {
+    			throw new MissingCommandParameterException("EquipeNom", "creerJoueur");
+    		}
+    		else if (parameters.get(4) == null) {
+    			throw new MissingCommandParameterException("Numero", "creerJoueur");
+    		}
+    		
+    		//Check if team exists
+            Team team = Team.getTeamWithName(connectionWithDatabase, parameters.get(3));
+            if (team == null) {
+                throw new TeamDoesntExistException(parameters.get(3));
             }
+    	}
+    	
+        Player player = new Player();
+        player.setFirstName(parameters.get(2));
+        player.setLastName(parameters.get(1));
+        if (parameters.get(3) != null) { //Checking only 1 param validates both
+    		player.setTeam(connectionWithDatabase, Team.getTeamWithName(connectionWithDatabase, parameters.get(3)));
+    		player.setNumber(Integer.parseInt(parameters.get(4)));    		
         }
-        Statement statement = null;
-        String query = "SELECT * FROM joueur WHERE joueurnom = " + parameters.get(1) + " OR joueurprenom = " + parameters.get(2) + ";";
-        try {
-            statement = connectionWithDatabase.createStatement();
-            ResultSet rs = statement.executeQuery(query);
-            if (rs.next()) {
-                throw new PlayerAlreadyExistsException(parameters.get(2), parameters.get(1));
-            } else {
-                String update = "INSERT INTO joueur (joueurnom, joueurprenom) VALUES ('" + parameters.get(1) + "', '" + parameters.get(2) + "');";
-                statement.executeUpdate(update);
-                if (parameters.get(3) != null) {
-                    query = "SELECT joueurid FROM joueur WHERE joueurprenom = " + parameters.get(2) + " AND joueurnom = " + parameters.get(1) + ";";
-                    rs = statement.executeQuery(query);
-                    String joueurId = rs.getString("joueurid");
-                    // update = "INSERT INTO faitpartie ("
-                    // TODO
-                    connectionWithDatabase.commit();
-                }
-            }
-        } finally {
-            closeStatement(statement);
+        if (parameters.get(5) != null) {
+        	player.setDate(new SimpleDateFormat("yyyy-mm-dd", Locale.FRENCH).parse(parameters.get(5)));
         }
     }
 
