@@ -215,7 +215,7 @@ class Application
                 createPlayer(command.getParameters());
                 break;
             case "afficherJoueursEquipe":
-                afficherJoueursEquipe(command.getParameters());
+                displayTeamPlayers(command.getParameters());
                 break;
             case "supprimerJoueur":
                 deletePlayer(command.getParameters());
@@ -224,22 +224,22 @@ class Application
                 createMatch(command.getParameters());
                 break;
             case "creerArbitre":
-                creerArbitre(command.getParameters());
+                createOfficial(command.getParameters());
                 break;
             case "afficherArbitres":
                 displayOfficials();
                 break;
             case "arbitrerMatch":
-                arbitrerMatch(command.getParameters());
+                rearbitrerMatch(command.getParameters());
                 break;
             case "entrerResultatMatch":
-                entrerResultatMatch(command.getParameters());
+                enterMatchResults(command.getParameters());
                 break;
             case "afficherResultatsDate":
-                afficherResultatsDate(command.getParameters());
+                displayResultsDate(command.getParameters());
                 break;
             case "afficherResultats":
-                afficherResultats(command.getParameters());
+                displayResults(command.getParameters());
                 break;
             case "aide":
                 showAvailableActions();
@@ -393,13 +393,14 @@ class Application
     }
 
     /**
-     * Afficher la liste des joueurs
+     * Display all the players of each team. If a team name is given, it will display all the player of this team only. Only currently employed
+     * players are displayed.
      *
      * @param parameters - [<EquipeNom>]
      * @throws TeamDoesntExistException
      * @throws MissingCommandParameterException
      */
-    private void afficherJoueursEquipe(ArrayList<String> parameters) throws TeamDoesntExistException
+    private void displayTeamPlayers(ArrayList<String> parameters) throws TeamDoesntExistException
     {
         if (parameters.isEmpty()) {
             List<Team> teams = Team.getAllTeams(connectionWithDatabase);
@@ -560,13 +561,13 @@ class Application
     }
 
     /**
-     * Crée un nouvel arbitre, en calculant le ArbitreId automatiquement
+     * Create a new official.
      *
      * @param parameters - <ArbitreNom> <ArbitrePrenom>
      * @throws MissingCommandParameterException
      * @throws FailedToSaveEntityException
      */
-    private void creerArbitre(ArrayList<String> parameters) throws MissingCommandParameterException, FailedToSaveEntityException
+    private void createOfficial(ArrayList<String> parameters) throws MissingCommandParameterException, FailedToSaveEntityException
     {
         if (parameters.isEmpty()) {
             throw new MissingCommandParameterException("creerArbitre", "ArbitreNom");
@@ -601,7 +602,7 @@ class Application
     }
 
     /**
-     * Affecter des arbitres à un match
+     * Referee a match.
      *
      * @param parameters - <MatchDate> <MatchHeure> <EquipeNomLocal> <EquipeNomVisiteur> <ArbitreNom> <ArbitrePrenom>
      * @throws MatchDoesntExistsException
@@ -611,7 +612,7 @@ class Application
      * @throws FailedToSaveEntityException
      * @throws TeamDoesntExistException
      */
-    private void arbitrerMatch(ArrayList<String> parameters) throws MatchDoesntExistsException, MissingCommandParameterException, OfficialDoesntExistsException, MatchAlreadyHaveTheMaximumNumberOfOfficialsException, FailedToSaveEntityException, TeamDoesntExistException
+    private void refereeAMatch(ArrayList<String> parameters) throws MatchDoesntExistsException, MissingCommandParameterException, OfficialDoesntExistsException, MatchAlreadyHaveTheMaximumNumberOfOfficialsException, FailedToSaveEntityException, TeamDoesntExistException
     {
         if (parameters.size() != 6) {
             throw new MissingCommandParameterException("arbitrerMatch", "");
@@ -641,12 +642,12 @@ class Application
     }
 
     /**
-     * Entrer le résultat d'un match.
+     * Enter the results of a match.
      *
      * @param parameters - <MatchDate> <MatchHeure> <EquipeNomLocal> <EquipeNomVisiteur> <PointsLocal> <PointsVisiteur>
      * @throws TeamDoesntExistException
      */
-    private void entrerResultatMatch(ArrayList<String> parameters) throws MissingCommandParameterException, NegativeScore, TeamDoesntExistException
+    private void enterMatchResults(ArrayList<String> parameters) throws MissingCommandParameterException, NegativeScore, TeamDoesntExistException
     {
         // Update
         // EX : entrerResultatMatch 2007-06-16 19:30:00 Yankees Mets 45 22
@@ -670,11 +671,11 @@ class Application
     }
 
     /**
-     * Afficher les résultats de tous les matchs
+     * Display the results of all the matchs. If a date is given, will only display matchs played until that date.
      *
      * @param parameters - [<APartirDate>]
      */
-    private void afficherResultatsDate(ArrayList<String> parameters)
+    private void displayResultsDate(ArrayList<String> parameters)
     {
         // afficherResultatsDate 2000-01-01
 
@@ -705,12 +706,12 @@ class Application
     }
 
     /**
-     * Afficher les résultats des matchs où une équipe a participé
+     * Display all the match results. If the team name parameter is given, display only the ones where this team played.
      *
      * @param parameters - [<EquipeNom>]
      * @throws TeamDoesntExistException
      */
-    private void afficherResultats(ArrayList<String> parameters) throws TeamDoesntExistException
+    private void displayResults(ArrayList<String> parameters) throws TeamDoesntExistException
     {
         // afficherResultats Yankees
 
