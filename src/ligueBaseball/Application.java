@@ -722,40 +722,24 @@ public class Application
      */
     private void entrerResultatMatch(ArrayList<String> parameters) throws MissingCommandParameterException, NegativeScore
     {
+        // Update
+        // EX : entrerResultatMatch 2007-06-16 19:30:00 Yankees Mets 45 22
+        // EX : entrerResultatMatch 2000-01-01 08:00:00 Yankees Red_Sox 70 30
 
         if (Integer.parseInt(parameters.get(4)) < 0 || Integer.parseInt(parameters.get(5)) < 0) {
             throw new NegativeScore();
         }
 
-        // Update
-        // EX : entrerResultatMatch 2007-06-16 19:30:00 Yankees Mets 45 22
-        // EX : entrerResultatMatch 2000-01-01 08:00:00 Yankees Red_Sox 70 30
+        Match match = Match.getMatchWithDateTimeEquipe(connectionWithDatabase, parameters.get(0), parameters.get(1), parameters.get(2), parameters.get(3));
 
-        PreparedStatement statement = null;
+        match.setLocalTeamScore(Integer.parseInt(parameters.get(4)));
+        match.setVisitorTeamScore(Integer.parseInt(parameters.get(5)));
         try {
-            statement = connectionWithDatabase.prepareStatement("UPDATE match SET pointslocal = ?, pointsvisiteur = ? WHERE " + "equipelocal = (SELECT equipeid FROM equipe WHERE equipenom = ?) AND " + "equipevisiteur = (SELECT equipeid FROM equipe WHERE equipenom = ?) AND " + "matchdate = ? AND " + "matchheure = ?");
-            statement.setInt(1, Integer.parseInt(parameters.get(4)));
-            statement.setInt(2, Integer.parseInt(parameters.get(5)));
-            statement.setString(3, parameters.get(2));
-            statement.setString(4, parameters.get(3));
-            try {
-                statement.setDate(5, Date.valueOf(parameters.get(0)));
-            } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("La date est invalide.");
-            }
-            try {
-                statement.setTime(6, Time.valueOf(parameters.get(1)));
-            } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("L'heure est invalide.");
-            }
-            statement.execute();
-            connectionWithDatabase.commit();
-
-        } catch (SQLException e) {
-            Logger.error(LOG_TYPE.SYSTEM, "Problème lors de la création du match.");
+            match.save(connectionWithDatabase);
+            Logger.info(LOG_TYPE.SYSTEM, "Update fait avec succes.");
+        } catch (FailedToSaveEntityException e) {
+            Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
             e.printStackTrace();
-        } finally {
-            closeStatement(statement);
         }
     }
 

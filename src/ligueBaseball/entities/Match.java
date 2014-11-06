@@ -58,6 +58,40 @@ public class Match extends DatabaseEntity
         }
     }
 
+    public static Match getMatchWithDateTimeEquipe(Connection databaseConnection, String date, String time, String equipelocal, String equipevisiteur)
+    {
+        PreparedStatement statement = null;
+
+        try {
+            statement = databaseConnection.prepareStatement("SELECT * FROM match WHERE " + "equipelocal = ? AND " + "equipevisiteur = ? AND " + "matchdate = ? AND " + "matchheure = ?");
+            statement.setInt(1, Team.getTeamWithName(databaseConnection, equipelocal).getId());
+            statement.setInt(2, Team.getTeamWithName(databaseConnection, equipevisiteur).getId());
+
+            try {
+                statement.setDate(3, Date.valueOf(date));
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("La date est invalide.");
+            }
+            try {
+                statement.setTime(4, Time.valueOf(time));
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("L'heure est invalide.");
+            }
+
+            ResultSet matchResult = statement.executeQuery();
+            if (!matchResult.next()) {
+                return null;
+            }
+            return getEntityFromResultSet(matchResult);
+
+        } catch (SQLException e) {
+            return null;
+
+        } finally {
+            closeStatement(statement);
+        }
+    }
+
     /**
      *
      * @param resultSet
@@ -115,8 +149,7 @@ public class Match extends DatabaseEntity
     {
         PreparedStatement statement = null;
         try {
-            id = getNextIdForTable(databaseConnection, "match", "matchid");
-            statement = databaseConnection.prepareStatement("UPDATE match SET equipelocal = ?, equipevisiteur = ?, terrainid = ?, matchdate = ?, matchheure = ?, pointslocal = ?, pointsvisiteur = ? WHERE matchid = ?;");
+            statement = databaseConnection.prepareStatement("UPDATE match SET equipelocal = ?, equipevisiteur = ?,terrainid = ?,matchdate = ?,matchheure = ?,pointslocal = ?,pointsvisiteur = ? WHERE matchid = ?;");
             statement.setInt(1, localTeamId);
             statement.setInt(2, visitorTeamId);
             statement.setInt(3, fieldId);
@@ -124,11 +157,11 @@ public class Match extends DatabaseEntity
             statement.setTime(5, time);
             statement.setInt(6, localTeamScore);
             statement.setInt(7, visitorTeamScore);
-            statement.setInt(8, id);
+            statement.setInt(8, this.id);
             statement.executeUpdate();
             databaseConnection.commit();
 
-        } catch (SQLException | FailedToRetrieveNextKeyFromSequenceException e) {
+        } catch (SQLException e) {
             try {
                 databaseConnection.rollback();
             } catch (SQLException e1) {
@@ -136,6 +169,7 @@ public class Match extends DatabaseEntity
             }
             e.printStackTrace();
             throw new FailedToSaveEntityException(e);
+
         } finally {
             closeStatement(statement);
         }
