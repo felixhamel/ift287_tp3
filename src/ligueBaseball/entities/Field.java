@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import ligueBaseball.Logger;
+import ligueBaseball.Logger.LOG_TYPE;
 import ligueBaseball.exceptions.FailedToDeleteEntityException;
 import ligueBaseball.exceptions.FailedToRetrieveNextKeyFromSequenceException;
 import ligueBaseball.exceptions.FailedToSaveEntityException;
@@ -36,6 +38,7 @@ public class Field extends DatabaseEntity
             return createFieldFromResultSet(fieldResult);
 
         } catch (SQLException e) {
+            Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
             return null;
 
         } finally {
@@ -65,6 +68,7 @@ public class Field extends DatabaseEntity
             return createFieldFromResultSet(fieldResult);
 
         } catch (SQLException e) {
+            Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
             return null;
 
         } finally {
@@ -99,7 +103,7 @@ public class Field extends DatabaseEntity
             try {
                 databaseConnection.rollback();
             } catch (SQLException e1) {
-                e1.printStackTrace();
+                Logger.error(LOG_TYPE.EXCEPTION, e1.getMessage());
             }
             throw new FailedToSaveEntityException(e);
         } finally {
@@ -123,7 +127,7 @@ public class Field extends DatabaseEntity
             try {
                 databaseConnection.rollback();
             } catch (SQLException e1) {
-                e1.printStackTrace();
+                Logger.error(LOG_TYPE.EXCEPTION, e1.getMessage());
             }
             throw new FailedToSaveEntityException(e);
         } finally {
@@ -146,7 +150,7 @@ public class Field extends DatabaseEntity
                 try {
                     databaseConnection.rollback();
                 } catch (SQLException e1) {
-                    e1.printStackTrace();
+                    Logger.error(LOG_TYPE.EXCEPTION, e1.getMessage());
                 }
                 throw new FailedToDeleteEntityException(e);
             } finally {

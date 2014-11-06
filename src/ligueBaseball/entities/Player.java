@@ -13,6 +13,7 @@ import ligueBaseball.Logger.LOG_TYPE;
 import ligueBaseball.exceptions.FailedToDeleteEntityException;
 import ligueBaseball.exceptions.FailedToRetrieveNextKeyFromSequenceException;
 import ligueBaseball.exceptions.FailedToSaveEntityException;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class Player extends DatabaseEntity
 {
@@ -47,7 +48,7 @@ public class Player extends DatabaseEntity
             return null;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
             return null;
 
         } finally {
@@ -69,7 +70,7 @@ public class Player extends DatabaseEntity
         PreparedStatement statement = null;
 
         try {
-            statement = databaseConnection.prepareStatement("SELECT * FROM joueur INNER JOIN faitpartie ON faitpartie.joueurid = joueur.joueurid WHERE joueur.joueurprenom = ? AND joueur.joueurnom = ?;");
+            statement = databaseConnection.prepareStatement("SELECT * FROM joueur INNER JOIN faitpartie ON faitpartie.joueurid = joueur.joueurid AND faitpartie.datefin IS NULL WHERE joueur.joueurprenom = ? AND joueur.joueurnom = ?;");
             statement.setString(1, firstName);
             statement.setString(2, lastName);
 
@@ -79,7 +80,7 @@ public class Player extends DatabaseEntity
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
 
         } finally {
             closeStatement(statement);
@@ -119,9 +120,8 @@ public class Player extends DatabaseEntity
             try {
                 databaseConnection.rollback();
             } catch (SQLException e1) {
-                e1.printStackTrace();
+                Logger.error(LOG_TYPE.EXCEPTION, e1.getMessage());
             }
-            e.printStackTrace();
             throw new FailedToSaveEntityException(e);
         } finally {
             closeStatement(statement);
@@ -145,9 +145,8 @@ public class Player extends DatabaseEntity
             try {
                 databaseConnection.rollback();
             } catch (SQLException e1) {
-                e1.printStackTrace();
+                Logger.error(LOG_TYPE.EXCEPTION, e1.getMessage());
             }
-            e.printStackTrace();
             throw new FailedToSaveEntityException(e);
         } finally {
             closeStatement(statement);
@@ -155,32 +154,9 @@ public class Player extends DatabaseEntity
     }
 
     @Override
-    public void delete(Connection databaseConnection) throws FailedToDeleteEntityException
+    public void delete(Connection databaseConnection) throws FailedToDeleteEntityException, Exception
     {
-        if (id >= 0) {
-            PreparedStatement statement = null;
-            try {
-                statement = databaseConnection.prepareStatement("DELETE FROM joueur WHERE joueurid = ?;");
-                statement.setInt(1, id);
-                statement.executeUpdate();
-                databaseConnection.commit();
-
-            } catch (SQLException e) {
-                try {
-                    databaseConnection.rollback();
-                } catch (SQLException e1) {
-                    e1.printStackTrace();
-                }
-                e.printStackTrace();
-                throw new FailedToDeleteEntityException(e);
-            } finally {
-                closeStatement(statement);
-            }
-        }
-        lastName = null;
-        firstName = null;
-        number = -1;
-        teamId = -1;
+        throw new NotImplementedException();
     }
 
     /**

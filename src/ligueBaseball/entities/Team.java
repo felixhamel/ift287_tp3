@@ -40,7 +40,6 @@ public class Team extends DatabaseEntity
                 teamList.add(getEntityFromResultSet(teams));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
             Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
         } finally {
             closeStatement(statement);
@@ -70,7 +69,7 @@ public class Team extends DatabaseEntity
             return getEntityFromResultSet(teamResult);
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
             return null;
 
         } finally {
@@ -100,7 +99,7 @@ public class Team extends DatabaseEntity
             return getEntityFromResultSet(teamResult);
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
             return null;
 
         } finally {
@@ -135,7 +134,7 @@ public class Team extends DatabaseEntity
             try {
                 databaseConnection.rollback();
             } catch (SQLException e1) {
-                e1.printStackTrace();
+                Logger.error(LOG_TYPE.EXCEPTION, e1.getMessage());
             }
             throw new FailedToSaveEntityException(e);
         } finally {
@@ -159,7 +158,7 @@ public class Team extends DatabaseEntity
             try {
                 databaseConnection.rollback();
             } catch (SQLException e1) {
-                e1.printStackTrace();
+                Logger.error(LOG_TYPE.EXCEPTION, e1.getMessage());
             }
             throw new FailedToSaveEntityException(e);
         } finally {
@@ -191,7 +190,7 @@ public class Team extends DatabaseEntity
                 try {
                     databaseConnection.rollback();
                 } catch (SQLException e1) {
-                    e1.printStackTrace();
+                    Logger.error(LOG_TYPE.EXCEPTION, e1.getMessage());
                 }
                 throw new FailedToDeleteEntityException(e);
             } finally {
@@ -289,7 +288,7 @@ public class Team extends DatabaseEntity
             try {
                 databaseConnection.rollback();
             } catch (SQLException e1) {
-                e1.printStackTrace();
+                Logger.error(LOG_TYPE.EXCEPTION, e1.getMessage());
             }
             e.printStackTrace();
             // Nothing because it should be because it was already there.
@@ -310,9 +309,10 @@ public class Team extends DatabaseEntity
         if (player.id >= 0) {
             PreparedStatement statement = null;
             try {
-                statement = databaseConnection.prepareStatement("DELETE faitpartie WHERE joueurid = ? AND equipeid = ?;");
-                statement.setInt(1, player.getId());
-                statement.setInt(2, id);
+                statement = databaseConnection.prepareStatement("UPDATE faitpartie SET datefin = ? WHERE joueurid = ? AND equipeid = ?;");
+                statement.setDate(1, new Date(Calendar.getInstance().getTime().getTime()));
+                statement.setInt(2, player.getId());
+                statement.setInt(3, id);
 
                 statement.executeUpdate();
                 databaseConnection.commit();
@@ -321,7 +321,7 @@ public class Team extends DatabaseEntity
                 try {
                     databaseConnection.rollback();
                 } catch (SQLException e1) {
-                    e1.printStackTrace();
+                    Logger.error(LOG_TYPE.EXCEPTION, e1.getMessage());
                 }
                 // Nothing
             } finally {

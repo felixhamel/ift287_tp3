@@ -4,7 +4,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
+import ligueBaseball.Logger;
+import ligueBaseball.Logger.LOG_TYPE;
 import ligueBaseball.exceptions.FailedToDeleteEntityException;
 import ligueBaseball.exceptions.FailedToRetrieveNextKeyFromSequenceException;
 import ligueBaseball.exceptions.FailedToSaveEntityException;
@@ -16,11 +20,41 @@ public class Official extends DatabaseEntity
     private String lastName;
 
     /**
+     * Get all the officials.
+     *
+     * @param databaseConnection
+     * @param id - ID of the official.
+     * @return List<Official> - All the officials.
+     */
+    public static List<Official> getAllOfficials(Connection databaseConnection)
+    {
+        List<Official> officials = new ArrayList<>();
+        PreparedStatement statement = null;
+
+        try {
+            statement = databaseConnection.prepareStatement("SELECT * FROM arbitre ORDER BY arbitreprenom ASC;");
+
+            ResultSet officialResult = statement.executeQuery();
+            while (officialResult.next()) {
+                officials.add(getEntityFromResultSet(officialResult));
+            }
+
+        } catch (SQLException e) {
+            Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
+
+        } finally {
+            closeStatement(statement);
+        }
+
+        return officials;
+    }
+
+    /**
      * Get the official with the given ID.
      *
      * @param databaseConnection
      * @param id - ID of the official.
-     * @return Officiel - If found, otherwise return null.
+     * @return Official - If found, otherwise return null.
      */
     public static Official getOfficialWithId(Connection databaseConnection, int id)
     {
@@ -37,7 +71,7 @@ public class Official extends DatabaseEntity
             return getEntityFromResultSet(officialResult);
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
             return null;
 
         } finally {
@@ -69,7 +103,7 @@ public class Official extends DatabaseEntity
             return getEntityFromResultSet(officialResult);
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
             return null;
 
         } finally {
@@ -104,9 +138,9 @@ public class Official extends DatabaseEntity
             try {
                 databaseConnection.rollback();
             } catch (SQLException e1) {
-                e1.printStackTrace();
+                Logger.error(LOG_TYPE.EXCEPTION, e1.getMessage());
             }
-            e.printStackTrace();
+            Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
             throw new FailedToSaveEntityException(e);
         } finally {
             closeStatement(statement);
@@ -129,9 +163,9 @@ public class Official extends DatabaseEntity
             try {
                 databaseConnection.rollback();
             } catch (SQLException e1) {
-                e1.printStackTrace();
+                Logger.error(LOG_TYPE.EXCEPTION, e1.getMessage());
             }
-            e.printStackTrace();
+            Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
             throw new FailedToSaveEntityException(e);
         } finally {
             closeStatement(statement);

@@ -50,7 +50,7 @@ public class Match extends DatabaseEntity
             return getEntityFromResultSet(matchResult);
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
             return null;
 
         } finally {
@@ -58,14 +58,24 @@ public class Match extends DatabaseEntity
         }
     }
 
-    public static Match getMatchWithDateTimeEquipe(Connection databaseConnection, String date, String time, String equipelocal, String equipevisiteur)
+    public static Match getMatchWithDateTimeEquipe(Connection databaseConnection, String date, String time, String equipelocal, String equipevisiteur) throws TeamDoesntExistException
     {
         PreparedStatement statement = null;
 
         try {
-            statement = databaseConnection.prepareStatement("SELECT * FROM match WHERE " + "equipelocal = ? AND " + "equipevisiteur = ? AND " + "matchdate = ? AND " + "matchheure = ?");
-            statement.setInt(1, Team.getTeamWithName(databaseConnection, equipelocal).getId());
-            statement.setInt(2, Team.getTeamWithName(databaseConnection, equipevisiteur).getId());
+            statement = databaseConnection.prepareStatement("SELECT * FROM match WHERE equipelocal = ? AND equipevisiteur = ? AND matchdate = ? AND matchheure = ?");
+
+            Team local = Team.getTeamWithName(databaseConnection, equipelocal);
+            if (local == null) {
+                throw new TeamDoesntExistException(equipelocal);
+            }
+            statement.setInt(1, local.getId());
+
+            Team visitor = Team.getTeamWithName(databaseConnection, equipevisiteur);
+            if (visitor == null) {
+                throw new TeamDoesntExistException(equipevisiteur);
+            }
+            statement.setInt(2, visitor.getId());
 
             try {
                 statement.setDate(3, Date.valueOf(date));
@@ -73,6 +83,9 @@ public class Match extends DatabaseEntity
                 throw new IllegalArgumentException("La date est invalide.");
             }
             try {
+                if (time.lastIndexOf(':') <= 2) {
+                    time += ":00";
+                }
                 statement.setTime(4, Time.valueOf(time));
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("L'heure est invalide.");
@@ -85,6 +98,7 @@ public class Match extends DatabaseEntity
             return getEntityFromResultSet(matchResult);
 
         } catch (SQLException e) {
+            Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
             return null;
 
         } finally {
@@ -135,9 +149,8 @@ public class Match extends DatabaseEntity
             try {
                 databaseConnection.rollback();
             } catch (SQLException e1) {
-                e1.printStackTrace();
+                Logger.error(LOG_TYPE.EXCEPTION, e1.getMessage());
             }
-            e.printStackTrace();
             throw new FailedToSaveEntityException(e);
         } finally {
             closeStatement(statement);
@@ -165,9 +178,8 @@ public class Match extends DatabaseEntity
             try {
                 databaseConnection.rollback();
             } catch (SQLException e1) {
-                e1.printStackTrace();
+                Logger.error(LOG_TYPE.EXCEPTION, e1.getMessage());
             }
-            e.printStackTrace();
             throw new FailedToSaveEntityException(e);
 
         } finally {
@@ -205,6 +217,7 @@ public class Match extends DatabaseEntity
             }
 
         } catch (SQLException e) {
+            Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
             return null;
 
         } finally {
@@ -239,6 +252,7 @@ public class Match extends DatabaseEntity
             }
 
         } catch (SQLException e) {
+            Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
             return null;
 
         } finally {
@@ -270,8 +284,9 @@ public class Match extends DatabaseEntity
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
             return null;
+
         } catch (IllegalArgumentException e) {
             throw new InvalidParameterException("La date est invalide.");
 
@@ -300,7 +315,6 @@ public class Match extends DatabaseEntity
                 officials.add(Official.getOfficialWithId(databaseConnection, officialResultSet.getInt("arbitreid")));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
             Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
         } finally {
             closeStatement(statement);
@@ -320,8 +334,8 @@ public class Match extends DatabaseEntity
         PreparedStatement statement = null;
         try {
             statement = databaseConnection.prepareStatement("INSERT INTO arbitrer (arbitreid, matchid) VALUES(?, ?);");
-            statement.setInt(1, id);
-            statement.setInt(2, official.getId());
+            statement.setInt(1, official.getId());
+            statement.setInt(2, id);
             statement.execute();
             databaseConnection.commit();
 
@@ -329,9 +343,8 @@ public class Match extends DatabaseEntity
             try {
                 databaseConnection.rollback();
             } catch (SQLException e1) {
-                e1.printStackTrace();
+                Logger.error(LOG_TYPE.EXCEPTION, e1.getMessage());
             }
-            e.printStackTrace();
             throw new FailedToSaveEntityException(e);
         } finally {
             closeStatement(statement);
