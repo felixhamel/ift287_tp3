@@ -170,7 +170,7 @@ class Application
                 scanner = new Scanner(new File(parameters.getEntryFile()));
                 while (scanner.hasNextLine()) {
                     String line = scanner.nextLine().trim();
-                    if (!line.startsWith("--") && line.length() > 5) {
+                    if (!line.startsWith("--")) {
                         try {
                             Logger.info(LOG_TYPE.COMMAND, line);
                             executeCommand(Command.extractCommandFromString(line));
@@ -179,8 +179,8 @@ class Application
                         } finally {
                             System.out.println("");
                         }
-                    } else {
-                        // Logger.info(LOG_TYPE.COMMENT, line.substring(2));
+                    } else if (line.length() > 2) {
+                        Logger.info(LOG_TYPE.COMMENT, line.substring(2));
                     }
                 }
             } catch (FileNotFoundException e) {
@@ -632,9 +632,12 @@ class Application
         // Make sure that the match don't have more than 4 officials
         if (match.getOfficials(connectionWithDatabase).size() >= 4) {
             throw new MatchAlreadyHaveTheMaximumNumberOfOfficialsException();
+        } else if (match.getOfficials(connectionWithDatabase).contains(official)) {
+            // Do nothing because the official is already defined for this match.
+            Logger.warning(LOG_TYPE.USER, "L'arbitre est déjà assigné a ce match.");
+        } else {
+            match.addOfficial(connectionWithDatabase, official);
         }
-
-        match.addOfficial(connectionWithDatabase, official);
     }
 
     /**
@@ -689,8 +692,7 @@ class Application
             System.out.println(String.format("%-11s %-15s %-10s %-13s %-11s %-10s", match.getLocalTeam(connectionWithDatabase).getName(), match.getVisitorTeam(connectionWithDatabase).getName(), match.getLocalTeamScore(), match.getVisitorTeamScore(), match.getDate(), match.getTime()));
 
             official = match.getOfficials(connectionWithDatabase);
-            System.out.println(String.format("\n"));
-            System.out.println(String.format("Liste des arbitres"));
+            System.out.println("\nListe des arbitres: ");
             if (official.size() != 0) {
                 for (Official offi : official) {
                     System.out.println(String.format(" -> %-10s %-10s", offi.getFirstName(), offi.getLastName()));
@@ -721,8 +723,7 @@ class Application
 
             official = match.getOfficials(connectionWithDatabase);
 
-            System.out.println(String.format("\n"));
-            System.out.println(String.format("Liste des arbitres"));
+            System.out.println("\nListe des arbitres: ");
             if (official.size() != 0) {
                 for (Official offi : official) {
                     System.out.println(String.format(" -> %-10s %-10s", offi.getFirstName(), offi.getLastName()));

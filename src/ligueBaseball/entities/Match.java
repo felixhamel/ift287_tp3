@@ -345,6 +345,7 @@ public class Match extends DatabaseEntity
             } catch (SQLException e1) {
                 Logger.error(LOG_TYPE.EXCEPTION, e1.getMessage());
             }
+            e.printStackTrace();
             throw new FailedToSaveEntityException(e);
         } finally {
             closeStatement(statement);

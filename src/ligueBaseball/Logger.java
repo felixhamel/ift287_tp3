@@ -38,6 +38,16 @@ public class Logger
         log("Erreur", type, message, args);
     }
 
+    public static void warning(LOG_TYPE type, String message)
+    {
+        log("Attention", type, message);
+    }
+
+    public static void warning(LOG_TYPE type, String message, Object... args)
+    {
+        log("Attention", type, message, args);
+    }
+
     public static void info(LOG_TYPE type, String message)
     {
         log("Info", type, message);
