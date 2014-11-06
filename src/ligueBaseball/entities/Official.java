@@ -37,6 +37,7 @@ public class Official extends DatabaseEntity
             return getEntityFromResultSet(officialResult);
 
         } catch (SQLException e) {
+            e.printStackTrace();
             return null;
 
         } finally {
@@ -68,6 +69,7 @@ public class Official extends DatabaseEntity
             return getEntityFromResultSet(officialResult);
 
         } catch (SQLException e) {
+            e.printStackTrace();
             return null;
 
         } finally {
@@ -91,7 +93,7 @@ public class Official extends DatabaseEntity
         PreparedStatement statement = null;
         try {
             id = getNextIdForTable(databaseConnection, "arbitre", "arbitreid");
-            statement = databaseConnection.prepareStatement("INSERT INTO arbitre (arbitreid, arbitreprenom, arbitrenom) VALUES(?, ?' ?);");
+            statement = databaseConnection.prepareStatement("INSERT INTO arbitre (arbitreid, arbitreprenom, arbitrenom) VALUES(?, ?, ?);");
             statement.setInt(1, id);
             statement.setString(2, firstName);
             statement.setString(3, lastName);
@@ -99,6 +101,7 @@ public class Official extends DatabaseEntity
             databaseConnection.commit();
 
         } catch (SQLException | FailedToRetrieveNextKeyFromSequenceException e) {
+            e.printStackTrace();
             throw new FailedToSaveEntityException(e);
         } finally {
             closeStatement(statement);
@@ -118,6 +121,7 @@ public class Official extends DatabaseEntity
             databaseConnection.commit();
 
         } catch (SQLException e) {
+            e.printStackTrace();
             throw new FailedToSaveEntityException(e);
         } finally {
             closeStatement(statement);
@@ -127,13 +131,6 @@ public class Official extends DatabaseEntity
     @Override
     public void delete(Connection databaseConnection) throws FailedToDeleteEntityException, Exception
     {
-        /*
-         * f (id >= 0) { PreparedStatement statement = null; try { statement = databaseConnection.prepareStatement("DELETE arbitre"); }
-         *
-         * }
-         *
-         * firstName = null; lastName = null;
-         */
         throw new NotImplementedException(); // Not needed for the moment
     }
 

@@ -38,6 +38,7 @@ public class Team extends DatabaseEntity
                 teamList.add(getEntityFromResultSet(teams));
             }
         } catch (SQLException e) {
+            e.printStackTrace();
             Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
         } finally {
             closeStatement(statement);
@@ -67,6 +68,7 @@ public class Team extends DatabaseEntity
             return getEntityFromResultSet(teamResult);
 
         } catch (SQLException e) {
+            e.printStackTrace();
             return null;
 
         } finally {
@@ -96,6 +98,7 @@ public class Team extends DatabaseEntity
             return getEntityFromResultSet(teamResult);
 
         } catch (SQLException e) {
+            e.printStackTrace();
             return null;
 
         } finally {
@@ -167,9 +170,9 @@ public class Team extends DatabaseEntity
             PreparedStatement statement = null;
             try {
                 // Delete equipe
-                statement = databaseConnection.prepareStatement("DELETE equipe WHERE equipeid = ?;");
+                statement = databaseConnection.prepareStatement("DELETE FROM equipe WHERE equipeid = ?;");
                 statement.setInt(1, id);
-                statement.executeQuery();
+                statement.executeUpdate();
                 databaseConnection.commit();
 
             } catch (SQLException e) {
@@ -215,7 +218,7 @@ public class Team extends DatabaseEntity
         List<Player> players = new ArrayList<>();
         PreparedStatement statement = null;
         try {
-            statement = databaseConnection.prepareStatement("SELECT * FROM faitpartie WHERE equipeid = ?;");
+            statement = databaseConnection.prepareStatement("SELECT joueurid FROM faitpartie WHERE equipeid = ? AND datefin IS NULL;");
             statement.setInt(1, id);
 
             ResultSet playersResultSet = statement.executeQuery();
@@ -225,7 +228,6 @@ public class Team extends DatabaseEntity
                     players.add(Player.getPlayerWithId(databaseConnection, playersResultSet.getInt("joueurid")));
                 }
             }
-            return players;
 
         } catch (SQLException e) {
             throw new FailedToRetrievePlayersOfTeamException(name, e);
@@ -233,6 +235,8 @@ public class Team extends DatabaseEntity
         } finally {
             closeStatement(statement);
         }
+
+        return players;
     }
 
     /**

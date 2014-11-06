@@ -6,6 +6,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
 
+import ligueBaseball.Logger;
+import ligueBaseball.Logger.LOG_TYPE;
 import ligueBaseball.exceptions.FailedToDeleteEntityException;
 import ligueBaseball.exceptions.FailedToRetrieveNextKeyFromSequenceException;
 import ligueBaseball.exceptions.FailedToSaveEntityException;
@@ -31,17 +33,19 @@ public class Player extends DatabaseEntity
         PreparedStatement statement = null;
 
         try {
-            statement = databaseConnection.prepareStatement("SELECT joueur.joueurid, joueur.joueurprenom, joueur.joueurnom, faitpartie.numero, faitpartie.equipeid FROM joueur INNER JOIN faitpartie ON faitpartie.joueurid = ? WHERE joueur.joueurid = ?;");
+            statement = databaseConnection.prepareStatement("SELECT * FROM joueur INNER JOIN faitpartie ON faitpartie.joueurid = ? WHERE joueur.joueurid = ?;");
             statement.setInt(1, id);
             statement.setInt(2, id);
 
             ResultSet fieldResult = statement.executeQuery();
-            if (!fieldResult.next()) {
-                return null;
+            if (fieldResult.next()) {
+                return createFieldFromResultSet(fieldResult);
             }
-            return createFieldFromResultSet(fieldResult);
+            Logger.error(LOG_TYPE.USER, "Impossible de trouver un joueur avec l'ID '%s'.", id);
+            return null;
 
         } catch (SQLException e) {
+            e.printStackTrace();
             return null;
 
         } finally {
@@ -62,7 +66,7 @@ public class Player extends DatabaseEntity
         PreparedStatement statement = null;
 
         try {
-            statement = databaseConnection.prepareStatement("SELECT joueur.joueurid, joueur.joueurprenom, joueur.joueurnom, faitpartie.numero, faitpartie.equipeid FROM joueur INNER JOIN faitpartie ON faitpartie.joueurid = joueur.joueurid WHERE joueur.joueurprenom = ? AND joueur.joueurnom = ?;");
+            statement = databaseConnection.prepareStatement("SELECT * FROM joueur INNER JOIN faitpartie ON faitpartie.joueurid = joueur.joueurid WHERE joueur.joueurprenom = ? AND joueur.joueurnom = ?;");
             statement.setString(1, firstName);
             statement.setString(2, lastName);
 
@@ -73,6 +77,7 @@ public class Player extends DatabaseEntity
             return createFieldFromResultSet(fieldResult);
 
         } catch (SQLException e) {
+            e.printStackTrace();
             return null;
 
         } finally {
@@ -89,7 +94,7 @@ public class Player extends DatabaseEntity
         player.lastName = resultSet.getString("joueurnom");
         player.number = resultSet.getInt("numero");
         player.teamId = resultSet.getInt("equipeid");
-        player.beginDate = resultSet.getDate("dateDebut");
+        player.beginDate = resultSet.getDate("datedebut");
 
         return player;
     }
@@ -140,7 +145,7 @@ public class Player extends DatabaseEntity
         if (id >= 0) {
             PreparedStatement statement = null;
             try {
-                statement = databaseConnection.prepareStatement("DELETE joueur WHERE joueurid = ?;");
+                statement = databaseConnection.prepareStatement("DELETE FROM joueur WHERE joueurid = ?;");
                 statement.setInt(1, id);
                 statement.executeUpdate();
                 databaseConnection.commit();
@@ -239,20 +244,24 @@ public class Player extends DatabaseEntity
     {
         this.number = number;
     }
-    
+
     /**
      * Get the beginning date.
+     *
      * @return - Beginning date.
      */
-    public Date getBeginningDate() {
-    	return beginDate;
+    public Date getBeginningDate()
+    {
+        return beginDate;
     }
-    
+
     /**
      * Set the beginning date.
+     *
      * @param date - Beginning date.
      */
-    public void setDate(Date date) {
-    	this.beginDate = date;
+    public void setDate(Date date)
+    {
+        this.beginDate = date;
     }
 }

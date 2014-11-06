@@ -131,8 +131,8 @@ public class Application
                     executeCommand(command);
                 }
             } catch (Exception e) {
-                Logger.error(LOG_TYPE.SYSTEM, e.getMessage() + "(" + e.getClass().getName() + ")");
-                // e.printStackTrace();
+                e.printStackTrace();
+                Logger.error(LOG_TYPE.EXCEPTION, e.getMessage() + "(" + e.getClass().getName() + ")");
             }
         }
     }
@@ -168,14 +168,21 @@ public class Application
             Scanner scanner = null;
             try {
                 scanner = new Scanner(new File(parameters.getEntryFile()));
-                String line;
-                while ((line = scanner.nextLine().trim()) != null) {
-                    if (!line.startsWith("--") && line.length() > 0) {
+                while (scanner.hasNextLine()) {
+                    String line = scanner.nextLine().trim();
+                    if (!line.startsWith("--") && line.length() > 5) {
                         try {
                             Logger.info(LOG_TYPE.COMMAND, line);
                             executeCommand(Command.extractCommandFromString(line));
                         } catch (Exception e) {
-                            Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
+                            Logger.error(LOG_TYPE.EXCEPTION, e.getMessage() + "(" + e.getClass().getName() + ")");
+                            e.printStackTrace();
+                            try {
+                                Thread.sleep(500);
+                            } catch (InterruptedException e1) {
+                                // TODO Auto-generated catch block
+                                e1.printStackTrace();
+                            }
                         }
                     } else {
                         Logger.info(LOG_TYPE.COMMENT, line.substring(2));
@@ -248,6 +255,7 @@ public class Application
                 System.out.println("Commande non implémentée.");
                 break;
         }
+        System.out.println("");
     }
 
     /**
@@ -297,7 +305,7 @@ public class Application
     {
         List<Team> teams = Team.getAllTeams(connectionWithDatabase);
         for (Team team : teams) {
-            System.out.println(String.format("%s, équipe # %s", team.getName(), team.getId()));
+            System.out.println(String.format(" -> %s, équipe # %s", team.getName(), team.getId()));
         }
     }
 
@@ -319,7 +327,11 @@ public class Application
         if (team == null) {
             Logger.error(LOG_TYPE.USER, "L'équipe %s n'existe pas.", parameters.get(0));
         } else {
-            team.delete(connectionWithDatabase);
+            try {
+                team.delete(connectionWithDatabase);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -334,31 +346,31 @@ public class Application
      */
     private void creerJoueur(ArrayList<String> parameters) throws MissingCommandParameterException, TeamDoesntExistException, FailedToSaveEntityException, NullPointerException, IllegalArgumentException, ParseException
     {
-        if (parameters.get(3) != null || parameters.get(4) != null) {
+        if (parameters.get(1) != null || parameters.get(2) != null) {
 
             // If param 3 or 4 exists, then they both can't be null
-            if (parameters.get(3) == null) {
+            if (parameters.get(1) == null) {
                 throw new MissingCommandParameterException("EquipeNom", "creerJoueur");
-            } else if (parameters.get(4) == null) {
+            } else if (parameters.get(2) == null) {
                 throw new MissingCommandParameterException("Numero", "creerJoueur");
             }
 
             // Check if team exists
-            Team team = Team.getTeamWithName(connectionWithDatabase, parameters.get(3));
+            Team team = Team.getTeamWithName(connectionWithDatabase, parameters.get(1));
             if (team == null) {
-                throw new TeamDoesntExistException(parameters.get(3));
+                throw new TeamDoesntExistException(parameters.get(1));
             }
         }
 
         Player player = new Player();
-        player.setFirstName(parameters.get(2));
-        player.setLastName(parameters.get(1));
+        player.setFirstName(parameters.get(1));
+        player.setLastName(parameters.get(0));
         if (parameters.get(3) != null) { // Checking only 1 param validates both
-            player.setTeam(connectionWithDatabase, Team.getTeamWithName(connectionWithDatabase, parameters.get(3)));
-            player.setNumber(Integer.parseInt(parameters.get(4)));
+            player.setTeam(connectionWithDatabase, Team.getTeamWithName(connectionWithDatabase, parameters.get(2)));
+            player.setNumber(Integer.parseInt(parameters.get(2)));
         }
-        if (parameters.get(5) != null) {
-            player.setDate(new SimpleDateFormat("yyyy-mm-dd", Locale.FRENCH).parse(parameters.get(5)));
+        if (parameters.get(4) != null) {
+            player.setDate(new SimpleDateFormat("yyyy-mm-dd", Locale.FRENCH).parse(parameters.get(4)));
         }
     }
 
@@ -366,17 +378,27 @@ public class Application
      * Afficher la liste des joueurs
      *
      * @param parameters - [<EquipeNom>]
+     * @throws TeamDoesntExistException
      * @throws MissingCommandParameterException
      */
-    private void afficherJoueursEquipe(ArrayList<String> parameters)
+    private void afficherJoueursEquipe(ArrayList<String> parameters) throws TeamDoesntExistException
     {
         if (parameters.isEmpty()) {
             List<Team> teams = Team.getAllTeams(connectionWithDatabase);
-            for (Team team : teams) {
-                showAllPlayersForTeam(team.getName());
+            if (teams != null) {
+                for (Team team : teams) {
+                    showAllPlayersForTeam(team);
+                }
+            } else {
+                throw new TeamDoesntExistException(parameters.get(0));
             }
         } else {
-            showAllPlayersForTeam(parameters.get(0));
+            Team team = Team.getTeamWithName(connectionWithDatabase, parameters.get(0));
+            if (team != null) {
+                showAllPlayersForTeam(team);
+            } else {
+                throw new TeamDoesntExistException(parameters.get(0));
+            }
         }
     }
 
@@ -386,24 +408,20 @@ public class Application
      * @param teamName - Name of the Team.
      * @throws FailedToRetrievePlayersOfTeamException
      */
-    private void showAllPlayersForTeam(String teamName)
+    private void showAllPlayersForTeam(Team team)
     {
         try {
-            Team team = Team.getTeamWithName(connectionWithDatabase, teamName);
-            if (team == null) {
-                Logger.error(LOG_TYPE.USER, "L'équipe %s n'existe pas.", teamName);
+            System.out.println(String.format("Équipe: %s", team.getName()));
+            List<Player> players = team.getPlayers(connectionWithDatabase);
+            if (players.isEmpty()) {
+                System.out.println(" -> Aucun joueur ne fait partie de cette équipe.");
             } else {
-                System.out.println(String.format("Équipe: %s", team.getName()));
-                List<Player> players = team.getPlayers(connectionWithDatabase);
-                if (players.isEmpty()) {
-                    System.out.println(" -> Aucun joueur ne fait partie de cette équipe.");
-                } else {
-                    for (Player player : players) {
-                        System.out.println(String.format(" -> %s %s #%s", player.getFirstName(), player.getLastName(), player.getNumber()));
-                    }
+                for (Player player : players) {
+                    System.out.println(String.format(" -> %s %s #%s", player.getFirstName(), player.getLastName(), player.getNumber()));
                 }
             }
         } catch (FailedToRetrievePlayersOfTeamException e) {
+            e.printStackTrace();
             Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
         }
     }
@@ -529,8 +547,14 @@ public class Application
         }
         match.setVisitorTeam(visitor);
 
+        // PATCH: in case the user forgot the seconds, we add them.
+        String timeAsString = parameters.get(1);
+        if (timeAsString.lastIndexOf(':') <= 2) {
+            timeAsString += ":00";
+        }
+
         match.setDate(Date.valueOf(parameters.get(0)));
-        match.setTime(Time.valueOf(parameters.get(1)));
+        match.setTime(Time.valueOf(timeAsString));
         try {
             match.save(connectionWithDatabase);
         } catch (FailedToSaveEntityException e) {
@@ -580,7 +604,7 @@ public class Application
 
             System.out.println("Les arbitres sont: ");
             while (arbitres.next()) {
-                System.out.println(String.format("%s %s", arbitres.getString("arbitrenom"), arbitres.getString("arbitreprenom")));
+                System.out.println(String.format(" -> %s %s", arbitres.getString("arbitrenom"), arbitres.getString("arbitreprenom")));
             }
 
         } catch (SQLException e) {
