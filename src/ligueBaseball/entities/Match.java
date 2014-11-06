@@ -48,6 +48,7 @@ public class Match extends DatabaseEntity
             return getEntityFromResultSet(matchResult);
 
         } catch (SQLException e) {
+            e.printStackTrace();
             return null;
 
         } finally {
@@ -123,6 +124,7 @@ public class Match extends DatabaseEntity
             databaseConnection.commit();
 
         } catch (SQLException | FailedToRetrieveNextKeyFromSequenceException e) {
+            e.printStackTrace();
             throw new FailedToSaveEntityException(e);
         } finally {
             closeStatement(statement);
@@ -146,7 +148,7 @@ public class Match extends DatabaseEntity
             statement.setInt(8, this.id);
             statement.executeUpdate();
             databaseConnection.commit();
-
+			
         } catch (SQLException e) {
             throw new FailedToSaveEntityException(e);
         } finally {
@@ -277,6 +279,7 @@ public class Match extends DatabaseEntity
                 officials.add(Official.getOfficialWithId(databaseConnection, officialResultSet.getInt("arbitreid")));
             }
         } catch (SQLException e) {
+            e.printStackTrace();
             Logger.error(LOG_TYPE.EXCEPTION, e.getMessage());
         } finally {
             closeStatement(statement);
@@ -302,6 +305,7 @@ public class Match extends DatabaseEntity
             databaseConnection.commit();
 
         } catch (SQLException e) {
+            e.printStackTrace();
             throw new FailedToSaveEntityException(e);
         } finally {
             closeStatement(statement);

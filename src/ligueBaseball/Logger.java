@@ -3,7 +3,7 @@ package ligueBaseball;
 public class Logger
 {
     public enum LOG_TYPE {
-        USER("Utilisateur"), SYSTEM("Système"), OTHER("Autre"), EXCEPTION("Exception"), COMMENT("Commentaire"), COMMAND("Commande");
+        USER("Utilisateur"), SYSTEM("Système"), OTHER("Autre"), EXCEPTION("Exception"), COMMENT("Commentaire"), COMMAND("Commande"), DEBUG("Debug");
 
         private final String value;
 
@@ -23,7 +23,7 @@ public class Logger
         System.out.println(String.format("%s[%s]: %s", level, type, message));
     }
 
-    private static void log(String level, LOG_TYPE type, String message, String... args)
+    private static void log(String level, LOG_TYPE type, String message, Object... args)
     {
         log(level, type, String.format(message, args));
     }
@@ -33,7 +33,7 @@ public class Logger
         log("Erreur", type, message);
     }
 
-    public static void error(LOG_TYPE type, String message, String... args)
+    public static void error(LOG_TYPE type, String message, Object... args)
     {
         log("Erreur", type, message, args);
     }
@@ -43,7 +43,7 @@ public class Logger
         log("Info", type, message);
     }
 
-    public static void info(LOG_TYPE type, String message, String... args)
+    public static void info(LOG_TYPE type, String message, Object... args)
     {
         log("Info", type, message, args);
     }

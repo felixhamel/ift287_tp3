@@ -127,7 +127,7 @@ public class Field extends DatabaseEntity
         if (id >= 0) {
             PreparedStatement statement = null;
             try {
-                statement = databaseConnection.prepareStatement("DELETE terrain WHERE terrainid = ?;");
+                statement = databaseConnection.prepareStatement("DELETE FROM terrain WHERE terrainid = ?;");
                 statement.setInt(1, id);
                 statement.executeQuery();
                 databaseConnection.commit();
