@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
+import java.security.InvalidParameterException;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.DriverManager;
@@ -13,20 +14,18 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Scanner;
 
 import ligueBaseball.Logger.LOG_TYPE;
 import ligueBaseball.command.Command;
+import ligueBaseball.entities.Field;
 import ligueBaseball.entities.Match;
 import ligueBaseball.entities.Official;
-import ligueBaseball.entities.Field;
 import ligueBaseball.entities.Player;
 import ligueBaseball.entities.Team;
 import ligueBaseball.exceptions.CannotFindTeamWithNameException;
@@ -36,6 +35,7 @@ import ligueBaseball.exceptions.FailedToRetrievePlayersOfTeamException;
 import ligueBaseball.exceptions.FailedToSaveEntityException;
 import ligueBaseball.exceptions.MissingCommandParameterException;
 import ligueBaseball.exceptions.NegativeScore;
+import ligueBaseball.exceptions.PlayerAlreadyExistsException;
 import ligueBaseball.exceptions.TeamCantPlayAgainstItselfException;
 import ligueBaseball.exceptions.TeamDoesntExistException;
 import ligueBaseball.exceptions.TeamIsNotEmptyException;
@@ -344,9 +344,12 @@ public class Application
      * @throws TeamDoesntExistException
      * @throws FailedToSaveEntityException
      * @throws ParseException
+     * @throws PlayerAlreadyExistsException
      */
-    private void creerJoueur(ArrayList<String> parameters) throws MissingCommandParameterException, TeamDoesntExistException, FailedToSaveEntityException, NullPointerException, IllegalArgumentException, ParseException
+    private void creerJoueur(ArrayList<String> parameters) throws MissingCommandParameterException, TeamDoesntExistException, FailedToSaveEntityException, NullPointerException, IllegalArgumentException, ParseException, PlayerAlreadyExistsException
     {
+        Team team = null;
+
         if (parameters.get(1) != null || parameters.get(2) != null) {
 
             // If param 3 or 4 exists, then they both can't be null
@@ -357,21 +360,42 @@ public class Application
             }
 
             // Check if team exists
-            Team team = Team.getTeamWithName(connectionWithDatabase, parameters.get(1));
+            team = Team.getTeamWithName(connectionWithDatabase, parameters.get(2));
             if (team == null) {
-                throw new TeamDoesntExistException(parameters.get(1));
+                throw new TeamDoesntExistException(parameters.get(2));
+            }
+        }
+
+        // Make sure that the player don't already exists
+        if (parameters.size() >= 4) {
+            List<Player> players = Player.getPlayerWithName(connectionWithDatabase, parameters.get(1), parameters.get(2));
+            for (Player player : players) {
+                if (player.getNumber() == Integer.parseInt(parameters.get(3))) {
+                    throw new PlayerAlreadyExistsException();
+                }
             }
         }
 
         Player player = new Player();
         player.setFirstName(parameters.get(1));
         player.setLastName(parameters.get(0));
-        if (parameters.get(3) != null) { // Checking only 1 param validates both
-            player.setTeam(connectionWithDatabase, Team.getTeamWithName(connectionWithDatabase, parameters.get(2)));
-            player.setNumber(Integer.parseInt(parameters.get(2)));
+
+        if (parameters.size() == 4) { // Checking only 1 param validates both
+            player.setNumber(Integer.parseInt(parameters.get(3)));
         }
-        if (parameters.get(4) != null) {
-            player.setDate(new SimpleDateFormat("yyyy-mm-dd", Locale.FRENCH).parse(parameters.get(4)));
+
+        if (parameters.size() == 5) {
+            try {
+                player.setDate(Date.valueOf(parameters.get(4)));
+            } catch (IllegalArgumentException e) {
+                throw new InvalidParameterException("La date est invalide.");
+            }
+        }
+
+        player.save(connectionWithDatabase);
+
+        if (parameters.size() >= 3) {
+            team.addPlayer(connectionWithDatabase, player);
         }
     }
 
@@ -440,16 +464,33 @@ public class Application
         } else if (parameters.size() == 1) {
             throw new MissingCommandParameterException("supprimerJoueur", "JoueurPrenom");
         }
-        Player player = Player.getPlayerWithName(connectionWithDatabase, parameters.get(1), parameters.get(0));
-        if (player == null) {
+
+        List<Player> players = Player.getPlayerWithName(connectionWithDatabase, parameters.get(1), parameters.get(0));
+
+        if (players.isEmpty()) {
             Logger.error(LOG_TYPE.USER, "Le joueur '%s %s' n'existe pas.", parameters.get(1), parameters.get(0));
         } else {
             try {
-                // Confirmation
-                System.out.println("Êtes-vous certain de vouloir supprimer ce joueur ? (O/N) : ");
-                char confirmation = new BufferedReader(new InputStreamReader(System.in)).readLine().trim().charAt(0);
-                if (confirmation == 'o' || confirmation == 'O') {
-                    deletePlayerFromDatabase(player);
+                if (players.size() == 1) {
+                    // Confirmation
+                    System.out.println("Êtes-vous certain de vouloir supprimer ce joueur ? (O/N) : ");
+                    char confirmation = new BufferedReader(new InputStreamReader(System.in)).readLine().trim().charAt(0);
+                    if (confirmation == 'o' || confirmation == 'O') {
+                        deletePlayerFromDatabase(players.get(0));
+                    }
+                } else {
+                    System.out.println("Entrez le # du joueur a supprimer parmi les suivants : ");
+
+                    int i = 0;
+                    for (Player player : players) {
+                        System.out.println(String.format(" (%s) %s %s id=%s numero=%s", i, player.getFirstName(), player.getLastName(), player.getId(), player.getNumber()));
+                        i++;
+                    }
+
+                    System.out.print("Votre choix : ");
+
+                    int playerNumber = Integer.parseInt(new BufferedReader(new InputStreamReader(System.in)).readLine().trim());
+                    deletePlayerFromDatabase(players.get(playerNumber));
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -681,37 +722,37 @@ public class Application
      */
     private void entrerResultatMatch(ArrayList<String> parameters) throws MissingCommandParameterException, NegativeScore
     {
-    	
-    	if(Integer.parseInt(parameters.get(4)) < 0 || Integer.parseInt(parameters.get(5)) < 0){
-    		throw new NegativeScore();
-		}
-    	
-    	//Update
-    	//EX : entrerResultatMatch 2007-06-16 19:30:00 Yankees Mets 45 22
-    	//EX : entrerResultatMatch 2000-01-01 08:00:00 Yankees Red_Sox 70 30
-    	
-    	PreparedStatement statement = null;
-    	try{
-        	statement = connectionWithDatabase
-        			.prepareStatement("UPDATE match SET pointslocal = ?, pointsvisiteur = ? WHERE "
-        					+ "equipelocal = (SELECT equipeid FROM equipe WHERE equipenom = ?) AND "
-        					+ "equipevisiteur = (SELECT equipeid FROM equipe WHERE equipenom = ?) AND "
-        					+ "matchdate = ? AND "
-        					+ "matchheure = ?");
-        	statement.setInt(1, Integer.parseInt(parameters.get(4)));
-        	statement.setInt(2, Integer.parseInt(parameters.get(5)));
-        	statement.setString(3,parameters.get(2));
-        	statement.setString(4,parameters.get(3));
-        	statement.setDate(5, Date.valueOf(parameters.get(0)));
-        	statement.setTime(6, Time.valueOf(parameters.get(1)));
-        	statement.execute();
-        	connectionWithDatabase.commit();
-        	
-        	
-        	
+
+        if (Integer.parseInt(parameters.get(4)) < 0 || Integer.parseInt(parameters.get(5)) < 0) {
+            throw new NegativeScore();
+        }
+
+        // Update
+        // EX : entrerResultatMatch 2007-06-16 19:30:00 Yankees Mets 45 22
+        // EX : entrerResultatMatch 2000-01-01 08:00:00 Yankees Red_Sox 70 30
+
+        PreparedStatement statement = null;
+        try {
+            statement = connectionWithDatabase.prepareStatement("UPDATE match SET pointslocal = ?, pointsvisiteur = ? WHERE " + "equipelocal = (SELECT equipeid FROM equipe WHERE equipenom = ?) AND " + "equipevisiteur = (SELECT equipeid FROM equipe WHERE equipenom = ?) AND " + "matchdate = ? AND " + "matchheure = ?");
+            statement.setInt(1, Integer.parseInt(parameters.get(4)));
+            statement.setInt(2, Integer.parseInt(parameters.get(5)));
+            statement.setString(3, parameters.get(2));
+            statement.setString(4, parameters.get(3));
+            try {
+                statement.setDate(5, Date.valueOf(parameters.get(0)));
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("La date est invalide.");
+            }
+            try {
+                statement.setTime(6, Time.valueOf(parameters.get(1)));
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("L'heure est invalide.");
+            }
+            statement.execute();
+            connectionWithDatabase.commit();
 
         } catch (SQLException e) {
-            Logger.error(LOG_TYPE.SYSTEM, "Probl�me lors de la cr�ation du match.");
+            Logger.error(LOG_TYPE.SYSTEM, "Problème lors de la création du match.");
             e.printStackTrace();
         } finally {
             closeStatement(statement);
@@ -725,36 +766,32 @@ public class Application
      */
     private void afficherResultatsDate(ArrayList<String> parameters)
     {
-    	//afficherResultatsDate 2000-01-01
-    	
+        // afficherResultatsDate 2000-01-01
+
         List<Match> matchs;
         List<Official> official;
-        
-        if(parameters.isEmpty() == false){matchs = Match.getMatchWithDate(connectionWithDatabase, parameters.get(0));}
-        else {matchs = Match.getAllMatch(connectionWithDatabase);}
-        
-        for (Match match : matchs){
-        	System.out.println(String.format("%-10s %-10s %-5s %-5s %-12s %-10s","Equipelocal", "Equipevisiteur", "Scorelocal", "ScoreVisiteur", " Matchdate", "MatchHeure"));
-        	System.out.println(String.format("%-11s %-15s %-10s %-13s %-11s %-10s"
-        			,match.getLocalTeam(connectionWithDatabase).getName()
-        			,match.getVisitorTeam(connectionWithDatabase).getName()
-        			,match.getLocalTeamScore()
-        			,match.getVisitorTeamScore()
-        			,match.getDate()
-        			,match.getTime()));
-        	
-        	official = match.getOfficials(connectionWithDatabase);
-        	System.out.println(String.format("\n"));
-        	System.out.println(String.format("Liste des arbitres"));
-        	if (official.size() !=0){
-        	for(Official offi : official){
-        			System.out.println(String.format("%-10s %-10s"
-        					,offi.getFirstName()
-        					,offi.getLastName()));
-        		}
-        	}
-        	else {System.out.println(String.format("Aucun arbitre durant le match."));}
-        	System.out.println(String.format("\n"));
+
+        if (parameters.isEmpty() == false) {
+            matchs = Match.getMatchWithDate(connectionWithDatabase, parameters.get(0));
+        } else {
+            matchs = Match.getAllMatch(connectionWithDatabase);
+        }
+
+        for (Match match : matchs) {
+            System.out.println(String.format("%-10s %-10s %-5s %-5s %-12s %-10s", "Equipelocal", "Equipevisiteur", "Scorelocal", "ScoreVisiteur", " Matchdate", "MatchHeure"));
+            System.out.println(String.format("%-11s %-15s %-10s %-13s %-11s %-10s", match.getLocalTeam(connectionWithDatabase).getName(), match.getVisitorTeam(connectionWithDatabase).getName(), match.getLocalTeamScore(), match.getVisitorTeamScore(), match.getDate(), match.getTime()));
+
+            official = match.getOfficials(connectionWithDatabase);
+            System.out.println(String.format("\n"));
+            System.out.println(String.format("Liste des arbitres"));
+            if (official.size() != 0) {
+                for (Official offi : official) {
+                    System.out.println(String.format("%-10s %-10s", offi.getFirstName(), offi.getLastName()));
+                }
+            } else {
+                System.out.println(String.format("Aucun arbitre durant le match."));
+            }
+            System.out.println(String.format("\n"));
         }
     }
 
@@ -762,35 +799,29 @@ public class Application
      * Afficher les résultats des matchs où une équipe a participé
      *
      * @param parameters - [<EquipeNom>]
+     * @throws TeamDoesntExistException
      */
-    private void afficherResultats(ArrayList<String> parameters)
+    private void afficherResultats(ArrayList<String> parameters) throws TeamDoesntExistException
     {
-        //afficherResultats Yankees
-    	
-    	List<Match> matchs = Match.getMatchForTeam(connectionWithDatabase, parameters.get(0));
-    	List<Official> official;
+        // afficherResultats Yankees
 
-        for (Match match : matchs){
-        	System.out.println(String.format("%-10s %-10s %-5s %-5s %-12s %-10s","Equipelocal", "Equipevisiteur", "Scorelocal", "ScoreVisiteur", " Matchdate", "MatchHeure"));
-        	System.out.println(String.format("%-11s %-15s %-10s %-13s %-11s %-10s"
-        			,match.getLocalTeam(connectionWithDatabase).getName()
-        			,match.getVisitorTeam(connectionWithDatabase).getName()
-        			,match.getLocalTeamScore()
-        			,match.getVisitorTeamScore()
-        			,match.getDate()
-        			,match.getTime()));
-        	official = match.getOfficials(connectionWithDatabase);
-        	System.out.println(String.format("\n"));
-        	System.out.println(String.format("Liste des arbitres"));
-        	if (official.size() !=0){
-        	for(Official offi : official){
-        			System.out.println(String.format("%-10s %-10s"
-        					,offi.getFirstName()
-        					,offi.getLastName()));
-        		}
-        	}
-        	else {System.out.println(String.format("Aucun arbitre durant le match."));}
-        	System.out.println(String.format("\n"));
+        List<Match> matchs = Match.getMatchForTeam(connectionWithDatabase, parameters.get(0));
+        List<Official> official;
+
+        for (Match match : matchs) {
+            System.out.println(String.format("%-10s %-10s %-5s %-5s %-12s %-10s", "Equipelocal", "Equipevisiteur", "Scorelocal", "ScoreVisiteur", " Matchdate", "MatchHeure"));
+            System.out.println(String.format("%-11s %-15s %-10s %-13s %-11s %-10s", match.getLocalTeam(connectionWithDatabase).getName(), match.getVisitorTeam(connectionWithDatabase).getName(), match.getLocalTeamScore(), match.getVisitorTeamScore(), match.getDate(), match.getTime()));
+            official = match.getOfficials(connectionWithDatabase);
+            System.out.println(String.format("\n"));
+            System.out.println(String.format("Liste des arbitres"));
+            if (official.size() != 0) {
+                for (Official offi : official) {
+                    System.out.println(String.format("%-10s %-10s", offi.getFirstName(), offi.getLastName()));
+                }
+            } else {
+                System.out.println(String.format("Aucun arbitre durant le match."));
+            }
+            System.out.println(String.format("\n"));
         }
     }
 

@@ -96,6 +96,11 @@ public class Field extends DatabaseEntity
             databaseConnection.commit();
 
         } catch (SQLException | FailedToRetrieveNextKeyFromSequenceException e) {
+            try {
+                databaseConnection.rollback();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
             throw new FailedToSaveEntityException(e);
         } finally {
             closeStatement(statement);
@@ -107,7 +112,7 @@ public class Field extends DatabaseEntity
     {
         PreparedStatement statement = null;
         try {
-            statement = databaseConnection.prepareStatement("UPDATE terrain SET terrainnom = ? AND terrainadresse = ? WHERE terrainid = ?;");
+            statement = databaseConnection.prepareStatement("UPDATE terrain SET terrainnom = ?, terrainadresse = ? WHERE terrainid = ?;");
             statement.setString(1, name);
             statement.setString(2, address);
             statement.setInt(3, id);
@@ -115,6 +120,11 @@ public class Field extends DatabaseEntity
             databaseConnection.commit();
 
         } catch (SQLException e) {
+            try {
+                databaseConnection.rollback();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
             throw new FailedToSaveEntityException(e);
         } finally {
             closeStatement(statement);
@@ -133,6 +143,11 @@ public class Field extends DatabaseEntity
                 databaseConnection.commit();
 
             } catch (SQLException e) {
+                try {
+                    databaseConnection.rollback();
+                } catch (SQLException e1) {
+                    e1.printStackTrace();
+                }
                 throw new FailedToDeleteEntityException(e);
             } finally {
                 closeStatement(statement);

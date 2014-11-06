@@ -101,6 +101,11 @@ public class Official extends DatabaseEntity
             databaseConnection.commit();
 
         } catch (SQLException | FailedToRetrieveNextKeyFromSequenceException e) {
+            try {
+                databaseConnection.rollback();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
             e.printStackTrace();
             throw new FailedToSaveEntityException(e);
         } finally {
@@ -113,7 +118,7 @@ public class Official extends DatabaseEntity
     {
         PreparedStatement statement = null;
         try {
-            statement = databaseConnection.prepareStatement("UPDATE arbitre SET arbitreprenom = ? AND arbitrenom = ? WHERE arbitreid = ?;");
+            statement = databaseConnection.prepareStatement("UPDATE arbitre SET arbitreprenom = ?, arbitrenom = ? WHERE arbitreid = ?;");
             statement.setString(1, firstName);
             statement.setString(2, lastName);
             statement.setInt(3, id);
@@ -121,6 +126,11 @@ public class Official extends DatabaseEntity
             databaseConnection.commit();
 
         } catch (SQLException e) {
+            try {
+                databaseConnection.rollback();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
             e.printStackTrace();
             throw new FailedToSaveEntityException(e);
         } finally {

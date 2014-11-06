@@ -29,7 +29,7 @@ public abstract class DatabaseEntity
      */
     public void save(Connection databaseConnection) throws FailedToSaveEntityException
     {
-        if (id == -1) {
+        if (id < 0) {
             create(databaseConnection);
         } else {
             update(databaseConnection);

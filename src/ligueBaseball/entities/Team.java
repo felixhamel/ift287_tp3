@@ -1,10 +1,12 @@
 package ligueBaseball.entities;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import ligueBaseball.Logger;
@@ -130,6 +132,11 @@ public class Team extends DatabaseEntity
             databaseConnection.commit();
 
         } catch (SQLException | FailedToRetrieveNextKeyFromSequenceException e) {
+            try {
+                databaseConnection.rollback();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
             throw new FailedToSaveEntityException(e);
         } finally {
             closeStatement(statement);
@@ -141,7 +148,7 @@ public class Team extends DatabaseEntity
     {
         PreparedStatement statement = null;
         try {
-            statement = databaseConnection.prepareStatement("UPDATE equipe SET equipenom = ? AND terrainid = ? WHERE equipeid = ?;");
+            statement = databaseConnection.prepareStatement("UPDATE equipe SET equipenom = ?, terrainid = ? WHERE equipeid = ?;");
             statement.setString(1, name);
             statement.setInt(2, fieldId);
             statement.setInt(3, id);
@@ -149,6 +156,11 @@ public class Team extends DatabaseEntity
             databaseConnection.commit();
 
         } catch (SQLException e) {
+            try {
+                databaseConnection.rollback();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
             throw new FailedToSaveEntityException(e);
         } finally {
             closeStatement(statement);
@@ -176,6 +188,11 @@ public class Team extends DatabaseEntity
                 databaseConnection.commit();
 
             } catch (SQLException e) {
+                try {
+                    databaseConnection.rollback();
+                } catch (SQLException e1) {
+                    e1.printStackTrace();
+                }
                 throw new FailedToDeleteEntityException(e);
             } finally {
                 closeStatement(statement);
@@ -254,15 +271,27 @@ public class Team extends DatabaseEntity
         // Insert
         PreparedStatement statement = null;
         try {
-            statement = databaseConnection.prepareStatement("INSERT INTO faitpartie VALUES(?, ?, ?, NOW(), NULL);");
+            statement = databaseConnection.prepareStatement("INSERT INTO faitpartie (joueurid, equipeid, numero, datedebut) VALUES(?, ?, ?, ?);");
             statement.setInt(1, player.getId());
             statement.setInt(2, id);
             statement.setInt(3, player.getNumber());
+
+            if (player.getBeginningDate() != null) {
+                statement.setDate(4, player.getBeginningDate());
+            } else {
+                statement.setDate(4, new Date(Calendar.getInstance().getTime().getTime()));
+            }
 
             statement.execute();
             databaseConnection.commit();
 
         } catch (SQLException e) {
+            try {
+                databaseConnection.rollback();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+            e.printStackTrace();
             // Nothing because it should be because it was already there.
 
         } finally {
@@ -289,6 +318,11 @@ public class Team extends DatabaseEntity
                 databaseConnection.commit();
 
             } catch (SQLException e) {
+                try {
+                    databaseConnection.rollback();
+                } catch (SQLException e1) {
+                    e1.printStackTrace();
+                }
                 // Nothing
             } finally {
                 closeStatement(statement);

@@ -1,10 +1,12 @@
 package ligueBaseball.entities;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
 
 import ligueBaseball.Logger;
 import ligueBaseball.Logger.LOG_TYPE;
@@ -18,8 +20,8 @@ public class Player extends DatabaseEntity
     String firstName;
     int number = -1;
     int teamId = -1;
-    Date beginDate = new Date();
-    Date endDate = new Date();
+    Date beginDate;
+    Date endDate;
 
     /**
      * Get the player with the given ID.
@@ -61,8 +63,9 @@ public class Player extends DatabaseEntity
      * @param lastName - Last name of the player.
      * @return Player - If found, otherwise return null.
      */
-    public static Player getPlayerWithName(Connection databaseConnection, String firstName, String lastName)
+    public static List<Player> getPlayerWithName(Connection databaseConnection, String firstName, String lastName)
     {
+        List<Player> players = new ArrayList<>();
         PreparedStatement statement = null;
 
         try {
@@ -71,18 +74,18 @@ public class Player extends DatabaseEntity
             statement.setString(2, lastName);
 
             ResultSet fieldResult = statement.executeQuery();
-            if (!fieldResult.next()) {
-                return null;
+            while (fieldResult.next()) {
+                players.add(createFieldFromResultSet(fieldResult));
             }
-            return createFieldFromResultSet(fieldResult);
 
         } catch (SQLException e) {
             e.printStackTrace();
-            return null;
 
         } finally {
             closeStatement(statement);
         }
+
+        return players;
     }
 
     private static Player createFieldFromResultSet(ResultSet resultSet) throws SQLException
@@ -113,6 +116,12 @@ public class Player extends DatabaseEntity
             databaseConnection.commit();
 
         } catch (SQLException | FailedToRetrieveNextKeyFromSequenceException e) {
+            try {
+                databaseConnection.rollback();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+            e.printStackTrace();
             throw new FailedToSaveEntityException(e);
         } finally {
             closeStatement(statement);
@@ -125,7 +134,7 @@ public class Player extends DatabaseEntity
         PreparedStatement statement = null;
         try {
             id = getNextIdForTable(databaseConnection, "joueur", "joueurid");
-            statement = databaseConnection.prepareStatement("UPDATE joueur SET joueurnom = ? AND joueurprenom = ? WHERE joueurid = ?;");
+            statement = databaseConnection.prepareStatement("UPDATE joueur SET joueurnom = ?, joueurprenom = ? WHERE joueurid = ?;");
             statement.setString(1, lastName);
             statement.setString(2, firstName);
             statement.setInt(3, id);
@@ -133,6 +142,12 @@ public class Player extends DatabaseEntity
             databaseConnection.commit();
 
         } catch (SQLException | FailedToRetrieveNextKeyFromSequenceException e) {
+            try {
+                databaseConnection.rollback();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+            e.printStackTrace();
             throw new FailedToSaveEntityException(e);
         } finally {
             closeStatement(statement);
@@ -151,6 +166,12 @@ public class Player extends DatabaseEntity
                 databaseConnection.commit();
 
             } catch (SQLException e) {
+                try {
+                    databaseConnection.rollback();
+                } catch (SQLException e1) {
+                    e1.printStackTrace();
+                }
+                e.printStackTrace();
                 throw new FailedToDeleteEntityException(e);
             } finally {
                 closeStatement(statement);

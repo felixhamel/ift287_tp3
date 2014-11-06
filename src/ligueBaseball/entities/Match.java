@@ -1,5 +1,6 @@
 package ligueBaseball.entities;
 
+import java.security.InvalidParameterException;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -14,11 +15,12 @@ import ligueBaseball.Logger.LOG_TYPE;
 import ligueBaseball.exceptions.FailedToDeleteEntityException;
 import ligueBaseball.exceptions.FailedToRetrieveNextKeyFromSequenceException;
 import ligueBaseball.exceptions.FailedToSaveEntityException;
+import ligueBaseball.exceptions.TeamDoesntExistException;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class Match extends DatabaseEntity
 {
-	private int localTeamId;
+    private int localTeamId;
     private int visitorTeamId;
     private int fieldId;
     private Date date;
@@ -57,7 +59,7 @@ public class Match extends DatabaseEntity
     }
 
     /**
-     * 
+     *
      * @param resultSet
      * @return match
      * @throws SQLException
@@ -96,6 +98,11 @@ public class Match extends DatabaseEntity
             databaseConnection.commit();
 
         } catch (SQLException | FailedToRetrieveNextKeyFromSequenceException e) {
+            try {
+                databaseConnection.rollback();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
             e.printStackTrace();
             throw new FailedToSaveEntityException(e);
         } finally {
@@ -109,7 +116,7 @@ public class Match extends DatabaseEntity
         PreparedStatement statement = null;
         try {
             id = getNextIdForTable(databaseConnection, "match", "matchid");
-            statement = databaseConnection.prepareStatement("UPDATE match SET equipelocal = ? AND equipevisiteur = ? AND terrainid = ? AND matchdate = ? AND matchheure = ? AND pointslocal = ? AND pointsvisiteur = ? WHERE matchid = ?;");
+            statement = databaseConnection.prepareStatement("UPDATE match SET equipelocal = ?, equipevisiteur = ?, terrainid = ?, matchdate = ?, matchheure = ?, pointslocal = ?, pointsvisiteur = ? WHERE matchid = ?;");
             statement.setInt(1, localTeamId);
             statement.setInt(2, visitorTeamId);
             statement.setInt(3, fieldId);
@@ -122,6 +129,11 @@ public class Match extends DatabaseEntity
             databaseConnection.commit();
 
         } catch (SQLException | FailedToRetrieveNextKeyFromSequenceException e) {
+            try {
+                databaseConnection.rollback();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
             e.printStackTrace();
             throw new FailedToSaveEntityException(e);
         } finally {
@@ -131,30 +143,32 @@ public class Match extends DatabaseEntity
 
     /**
      * Get all match for a team
-     * 
+     *
      * @param databaseConnection
-     * @param TeamName
+     * @param teamName
      * @return List of match
+     * @throws TeamDoesntExistException
      */
-    public static List<Match> getMatchForTeam(Connection databaseConnection, String TeamName){
-    	List<Match> MatchTeam = new ArrayList<>();
-    	PreparedStatement statement = null;
-    	
+    public static List<Match> getMatchForTeam(Connection databaseConnection, String teamName) throws TeamDoesntExistException
+    {
+        List<Match> MatchTeam = new ArrayList<>();
+        PreparedStatement statement = null;
+
         try {
-        	int id = Team.getTeamWithName(databaseConnection, TeamName).getId();
-        	
-            statement = databaseConnection.prepareStatement("SELECT * FROM match WHERE equipelocal = ? "
-            		+ "or equipevisiteur = ? "
-            		+ "AND pointslocal NOTNULL "
-            		+ "AND pointsvisiteur NOTNULL;");
+            Team team = Team.getTeamWithName(databaseConnection, teamName);
+            if (team == null) {
+                throw new TeamDoesntExistException(teamName);
+            }
+            int id = team.getId();
+
+            statement = databaseConnection.prepareStatement("SELECT * FROM match WHERE equipelocal = ? " + "or equipevisiteur = ? " + "AND pointslocal NOTNULL " + "AND pointsvisiteur NOTNULL;");
             statement.setInt(1, id);
             statement.setInt(2, id);
 
             ResultSet MatchResultSet = statement.executeQuery();
             while (MatchResultSet.next()) {
-            	MatchTeam.add(getEntityFromResultSet(MatchResultSet));
+                MatchTeam.add(getEntityFromResultSet(MatchResultSet));
             }
-            
 
         } catch (SQLException e) {
             return null;
@@ -164,7 +178,7 @@ public class Match extends DatabaseEntity
         }
         return MatchTeam;
     }
-    
+
     @Override
     public void delete(Connection databaseConnection) throws FailedToDeleteEntityException, Exception
 
@@ -173,22 +187,22 @@ public class Match extends DatabaseEntity
     }
 
     /**
-     * Get every match 
-     * 
+     * Get every match
+     *
      * @param databaseConnection
      * @return list of all match
      */
-    public static List<Match> getAllMatch(Connection databaseConnection){
-    	List<Match> Match = new ArrayList<>();
-    	PreparedStatement statement = null;
+    public static List<Match> getAllMatch(Connection databaseConnection)
+    {
+        List<Match> Match = new ArrayList<>();
+        PreparedStatement statement = null;
 
         try {
             statement = databaseConnection.prepareStatement("SELECT * FROM match");
             ResultSet MatchResultSet = statement.executeQuery();
             while (MatchResultSet.next()) {
-            	Match.add(getEntityFromResultSet(MatchResultSet));
+                Match.add(getEntityFromResultSet(MatchResultSet));
             }
-            
 
         } catch (SQLException e) {
             return null;
@@ -197,49 +211,49 @@ public class Match extends DatabaseEntity
             closeStatement(statement);
         }
         return Match;
-    	
+
     }
-    
+
     /**
      * Get list of match from a date
-     * 
+     *
      * @param databaseConnection
      * @param date
      * @return list of match after the date
      */
-    public static List<Match> getMatchWithDate(Connection databaseConnection, String date){
-    	
-    	List<Match> MatchDate = new ArrayList<>();
-    	PreparedStatement statement = null;
+    public static List<Match> getMatchWithDate(Connection databaseConnection, String date)
+    {
+        List<Match> MatchDate = new ArrayList<>();
+        PreparedStatement statement = null;
 
         try {
-            statement = databaseConnection.prepareStatement("SELECT * FROM match WHERE matchdate >= ?"
-            		+ "AND pointslocal NOTNULL "
-            		+ "AND pointsvisiteur NOTNULL;");
+            statement = databaseConnection.prepareStatement("SELECT * FROM match WHERE matchdate >= ?" + "AND pointslocal NOTNULL " + "AND pointsvisiteur NOTNULL;");
             statement.setDate(1, Date.valueOf(date));
 
             ResultSet MatchResultSet = statement.executeQuery();
             while (MatchResultSet.next()) {
-            	MatchDate.add(getEntityFromResultSet(MatchResultSet));
+                MatchDate.add(getEntityFromResultSet(MatchResultSet));
             }
-            
 
         } catch (SQLException e) {
+            e.printStackTrace();
             return null;
+        } catch (IllegalArgumentException e) {
+            throw new InvalidParameterException("La date est invalide.");
 
         } finally {
             closeStatement(statement);
         }
         return MatchDate;
     }
-    
+
     /**
      * Get the officials for this match, if any.
      *
      * @param databaseConnection
      * @return List of the officials that where there for the match.
      */
-    
+
     public List<Official> getOfficials(Connection databaseConnection)
     {
         List<Official> officials = new ArrayList<>();
@@ -278,6 +292,11 @@ public class Match extends DatabaseEntity
             databaseConnection.commit();
 
         } catch (SQLException e) {
+            try {
+                databaseConnection.rollback();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
             e.printStackTrace();
             throw new FailedToSaveEntityException(e);
         } finally {
