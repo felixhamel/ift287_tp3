@@ -30,16 +30,11 @@ import ligueBaseball.entities.Official;
 import ligueBaseball.entities.Player;
 import ligueBaseball.entities.Team;
 import ligueBaseball.exceptions.CannotFindTeamWithNameException;
-import ligueBaseball.exceptions.CreatePlayerParametersMissingException;
 import ligueBaseball.exceptions.FailedToConnectToDatabaseException;
 import ligueBaseball.exceptions.FailedToDeleteEntityException;
-import ligueBaseball.exceptions.FailedToRetrieveFieldIdException;
-import ligueBaseball.exceptions.FailedToRetrieveNextKeyFromSequenceException;
 import ligueBaseball.exceptions.FailedToRetrievePlayersOfTeamException;
-import ligueBaseball.exceptions.FailedToRetrieveTeamIdException;
 import ligueBaseball.exceptions.FailedToSaveEntityException;
 import ligueBaseball.exceptions.MissingCommandParameterException;
-import ligueBaseball.exceptions.PlayerAlreadyExistsException;
 import ligueBaseball.exceptions.TeamCantPlayAgainstItselfException;
 import ligueBaseball.exceptions.TeamDoesntExistException;
 import ligueBaseball.exceptions.TeamIsNotEmptyException;
@@ -330,40 +325,40 @@ public class Application
 
     /**
      * Create a player
+     *
      * @param parameters - <JoueurNom> <JoueurPrenom> [<EquipeNom> <Numero> [<DateDbut>]]
      * @throws MissingCommandParameterException
      * @throws TeamDoesntExistException
      * @throws FailedToSaveEntityException
-     * @throws ParseException 
+     * @throws ParseException
      */
     private void creerJoueur(ArrayList<String> parameters) throws MissingCommandParameterException, TeamDoesntExistException, FailedToSaveEntityException, NullPointerException, IllegalArgumentException, ParseException
     {
-    	if (parameters.get(3) != null || parameters.get(4) != null) {
-    		
-    		//If param 3 or 4 exists, then they both can't be null
-    		if (parameters.get(3) == null) {
-    			throw new MissingCommandParameterException("EquipeNom", "creerJoueur");
-    		}
-    		else if (parameters.get(4) == null) {
-    			throw new MissingCommandParameterException("Numero", "creerJoueur");
-    		}
-    		
-    		//Check if team exists
+        if (parameters.get(3) != null || parameters.get(4) != null) {
+
+            // If param 3 or 4 exists, then they both can't be null
+            if (parameters.get(3) == null) {
+                throw new MissingCommandParameterException("EquipeNom", "creerJoueur");
+            } else if (parameters.get(4) == null) {
+                throw new MissingCommandParameterException("Numero", "creerJoueur");
+            }
+
+            // Check if team exists
             Team team = Team.getTeamWithName(connectionWithDatabase, parameters.get(3));
             if (team == null) {
                 throw new TeamDoesntExistException(parameters.get(3));
             }
-    	}
-    	
+        }
+
         Player player = new Player();
         player.setFirstName(parameters.get(2));
         player.setLastName(parameters.get(1));
-        if (parameters.get(3) != null) { //Checking only 1 param validates both
-    		player.setTeam(connectionWithDatabase, Team.getTeamWithName(connectionWithDatabase, parameters.get(3)));
-    		player.setNumber(Integer.parseInt(parameters.get(4)));    		
+        if (parameters.get(3) != null) { // Checking only 1 param validates both
+            player.setTeam(connectionWithDatabase, Team.getTeamWithName(connectionWithDatabase, parameters.get(3)));
+            player.setNumber(Integer.parseInt(parameters.get(4)));
         }
         if (parameters.get(5) != null) {
-        	player.setDate(new SimpleDateFormat("yyyy-mm-dd", Locale.FRENCH).parse(parameters.get(5)));
+            player.setDate(new SimpleDateFormat("yyyy-mm-dd", Locale.FRENCH).parse(parameters.get(5)));
         }
     }
 
@@ -494,12 +489,9 @@ public class Application
      * @param parameters - <MatchDate> <MatchHeure> <EquipeNomLocal> <EquipeNomVisiteur>
      * @throws MissingCommandParameterException
      * @throws TeamCantPlayAgainstItselfException
-     * @throws FailedToRetrieveFieldIdException
      * @throws CannotFindTeamWithNameException
-     * @throws FailedToRetrieveTeamIdException
-     * @throws FailedToRetrieveNextKeyFromSequenceException
      */
-    private void createMatch(ArrayList<String> parameters) throws MissingCommandParameterException, TeamCantPlayAgainstItselfException, CannotFindTeamWithNameException, FailedToRetrieveFieldIdException, FailedToRetrieveTeamIdException, FailedToRetrieveNextKeyFromSequenceException
+    private void createMatch(ArrayList<String> parameters) throws MissingCommandParameterException, TeamCantPlayAgainstItselfException, CannotFindTeamWithNameException
     {
         // Validate parameters
         switch (parameters.size()) {
