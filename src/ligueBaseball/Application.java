@@ -230,7 +230,7 @@ class Application
                 displayOfficials();
                 break;
             case "arbitrerMatch":
-                rearbitrerMatch(command.getParameters());
+                refereeAMatch(command.getParameters());
                 break;
             case "entrerResultatMatch":
                 enterMatchResults(command.getParameters());

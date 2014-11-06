@@ -6,8 +6,9 @@ public class Command
 {
     /**
      * Extract the command and parameters if any from a given String.
-     * 
+     *
      * @param commandWithParametersIfAny - String with command and parameters if any.
+     * @return Command - Extracted command from the user input.
      */
     public static Command extractCommandFromString(String commandWithParametersIfAny)
     {
@@ -28,7 +29,7 @@ public class Command
 
     /**
      * Default constructor.
-     * 
+     *
      * @param commandName - Name of the command.
      * @param parameters - Parameters given with the command.
      */
@@ -39,7 +40,7 @@ public class Command
 
     /**
      * Get the name of the command.
-     * 
+     *
      * @return String - Name of the command.
      */
     public String getCommandName()
@@ -49,7 +50,7 @@ public class Command
 
     /**
      * Get the parameters given with the command if any.
-     * 
+     *
      * @return ArrayList or String - Parameters if any.
      */
     public ArrayList<String> getParameters()

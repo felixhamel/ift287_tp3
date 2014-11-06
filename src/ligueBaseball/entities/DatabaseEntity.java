@@ -25,7 +25,10 @@ public abstract class DatabaseEntity
     }
 
     /**
-     * Save the current entity.
+     * Save the current entity
+     *
+     * @param databaseConnection - Connection with database
+     * @throws FailedToSaveEntityException Failed to save entity.
      */
     public void save(Connection databaseConnection) throws FailedToSaveEntityException
     {
@@ -38,23 +41,32 @@ public abstract class DatabaseEntity
 
     /**
      * Create the new entity.
+     *
+     * @param databaseConnection - Connection with database
+     * @throws FailedToSaveEntityException Failed to save entity.
      */
     protected abstract void create(Connection databaseConnection) throws FailedToSaveEntityException;
 
     /**
      * Update the current entity.
+     *
+     * @param databaseConnection - Connection with database
+     * @throws FailedToSaveEntityException Failed to save entity.
      */
     protected abstract void update(Connection databaseConnection) throws FailedToSaveEntityException;
 
     /**
      * Delete the current entity.
+     *
+     * @param databaseConnection - Connection with database
+     * @throws FailedToDeleteEntityException Failed to delete entity.
      */
     public abstract void delete(Connection databaseConnection) throws FailedToDeleteEntityException, Exception;
 
     /**
      * Close the given statement if not null.
      *
-     * @param statement
+     * @param statement - Statement.
      */
     protected static void closeStatement(Statement statement)
     {
@@ -70,6 +82,7 @@ public abstract class DatabaseEntity
     /**
      * Retrieve the next ID for the given table name.
      *
+     * @param databaseConnection - Connection with database
      * @param tableName - Name of the table we want the next primary id.
      * @param keyColumnName - Name of the column where is the primary key in the table given in the first parameter.
      * @return int - ID to use.

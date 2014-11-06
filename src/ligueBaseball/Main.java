@@ -7,9 +7,10 @@ public class Main
 {
     /**
      * Main function of the program.
-     * 
-     * @throws UnknownCommandException
-     * @throws FailedToConnectToDatabaseException
+     *
+     * @param args - Program arguments
+     * @throws UnknownCommandException Unknown command
+     * @throws FailedToConnectToDatabaseException Failed to connect to the database
      */
     public static void main(String[] args) throws FailedToConnectToDatabaseException, UnknownCommandException
     {
@@ -18,7 +19,7 @@ public class Main
 
     /**
      * Extract the program parameters and put them in the programParameters class variable.
-     * 
+     *
      * @param args - All the arguments received when the program was launched.
      * @return ApplicationParameters - Parameters expected by the application.
      */

@@ -31,7 +31,7 @@ public class Match extends DatabaseEntity
     /**
      * Get the match that match with the given ID.
      *
-     * @param databaseConnection
+     * @param databaseConnection - Connection with database - Connection with database
      * @param id - ID of the match to find.
      * @return Match - If found, otherwise return null.
      */
@@ -58,6 +58,17 @@ public class Match extends DatabaseEntity
         }
     }
 
+    /**
+     * Get a match that occured at a specific time between two given teams.
+     *
+     * @param databaseConnection - Connection with database - Connection with database
+     * @param date - Date of the match
+     * @param time - Time of the match
+     * @param equipelocal - Local team
+     * @param equipevisiteur - Visitor team
+     * @return Match - If found, otherwise return null.
+     * @throws TeamDoesntExistException Team doesn't exists.
+     */
     public static Match getMatchWithDateTimeEquipe(Connection databaseConnection, String date, String time, String equipelocal, String equipevisiteur) throws TeamDoesntExistException
     {
         PreparedStatement statement = null;
@@ -107,10 +118,11 @@ public class Match extends DatabaseEntity
     }
 
     /**
+     * Extract entity from given ResultSet.
      *
-     * @param resultSet
-     * @return match
-     * @throws SQLException
+     * @param resultSet - Result set
+     * @return match - Created object from the result set.
+     * @throws SQLException Exception during communication with the database.
      */
     private static Match getEntityFromResultSet(ResultSet resultSet) throws SQLException
     {
@@ -190,10 +202,10 @@ public class Match extends DatabaseEntity
     /**
      * Get all match for a team
      *
-     * @param databaseConnection
-     * @param teamName
+     * @param databaseConnection - Connection with database - Connection with database
+     * @param teamName - Name of the team
      * @return List of match
-     * @throws TeamDoesntExistException
+     * @throws TeamDoesntExistException Team doesn't exists.
      */
     public static List<Match> getMatchForTeam(Connection databaseConnection, String teamName) throws TeamDoesntExistException
     {
@@ -236,7 +248,7 @@ public class Match extends DatabaseEntity
     /**
      * Get every match
      *
-     * @param databaseConnection
+     * @param databaseConnection - Connection with database - Connection
      * @return list of all match
      */
     public static List<Match> getAllMatch(Connection databaseConnection)
@@ -265,8 +277,8 @@ public class Match extends DatabaseEntity
     /**
      * Get list of match from a date
      *
-     * @param databaseConnection
-     * @param date
+     * @param databaseConnection - Connection with database
+     * @param date - Date of the match
      * @return list of match after the date
      */
     public static List<Match> getMatchWithDate(Connection databaseConnection, String date)
@@ -299,7 +311,7 @@ public class Match extends DatabaseEntity
     /**
      * Get the officials for this match, if any.
      *
-     * @param databaseConnection
+     * @param databaseConnection - Connection with database
      * @return List of the officials that where there for the match.
      */
 
@@ -325,9 +337,9 @@ public class Match extends DatabaseEntity
     /**
      * Add an official that was present at this match. Match MUST have been saved in the database before doing this.
      *
-     * @param databaseConnection
+     * @param databaseConnection - Connection with database
      * @param official - Official that was present at this match.
-     * @throws FailedToSaveEntityException
+     * @throws FailedToSaveEntityException Failed to save entity.
      */
     public void addOfficial(Connection databaseConnection, Official official) throws FailedToSaveEntityException
     {
@@ -355,7 +367,7 @@ public class Match extends DatabaseEntity
     /**
      * Get the local team for this match.
      *
-     * @param databaseConnection
+     * @param databaseConnection - Connection with database
      * @return Team - If found, otherwise return null.
      */
     public Team getLocalTeam(Connection databaseConnection)
@@ -376,7 +388,7 @@ public class Match extends DatabaseEntity
     /**
      * Get the visitor team for this match.
      *
-     * @param databaseConnection
+     * @param databaseConnection - Connection with database
      * @return Team - If found, otherwise return null.
      */
     public Team getVisitorTeam(Connection databaseConnection)
@@ -397,7 +409,7 @@ public class Match extends DatabaseEntity
     /**
      * Get the fiels the match was/will be played on.
      *
-     * @param databaseConnection
+     * @param databaseConnection - Connection with database
      * @return Field - If found, otherwise return null.
      */
     public Field getField(Connection databaseConnection)

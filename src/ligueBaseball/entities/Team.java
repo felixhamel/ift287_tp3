@@ -25,7 +25,7 @@ public class Team extends DatabaseEntity
     /**
      * Get all the teams.
      *
-     * @param databaseConnection
+     * @param databaseConnection - Connection with database
      * @return List - All the teams.
      */
     public static List<Team> getAllTeams(Connection databaseConnection)
@@ -50,7 +50,7 @@ public class Team extends DatabaseEntity
     /**
      * Get the team with the given ID.
      *
-     * @param databaseConnection
+     * @param databaseConnection - Connection with database
      * @param id - ID of the team we want to retrieve.
      * @return Team - If found, return entity, otherwise return null.
      */
@@ -80,7 +80,7 @@ public class Team extends DatabaseEntity
     /**
      * Get the team with the given name.
      *
-     * @param databaseConnection
+     * @param databaseConnection - Connection with database
      * @param name - Name of the team we want to retrieve.
      * @return Team - If found, return entity, otherwise return null.
      */
@@ -225,9 +225,9 @@ public class Team extends DatabaseEntity
     /**
      * Get all players for current team.
      *
-     * @param databaseConnection
+     * @param databaseConnection - Connection with database
      * @return List - All the players.
-     * @throws FailedToRetrievePlayersOfTeamException
+     * @throws FailedToRetrievePlayersOfTeamException Failed to retrieve players of team.
      */
     public List<Player> getPlayers(Connection databaseConnection) throws FailedToRetrievePlayersOfTeamException
     {
@@ -258,9 +258,9 @@ public class Team extends DatabaseEntity
     /**
      * Add a new player in this team.
      *
-     * @param databaseConnection
+     * @param databaseConnection - Connection with database
      * @param player - Player to add to team.
-     * @throws FailedToSaveEntityException
+     * @throws FailedToSaveEntityException Failed to save entity.
      */
     public void addPlayer(Connection databaseConnection, Player player) throws FailedToSaveEntityException
     {
@@ -301,7 +301,7 @@ public class Team extends DatabaseEntity
     /**
      * Remove a player from this team.
      *
-     * @param databaseConnection
+     * @param databaseConnection - Connection with database
      * @param player - Player to remove from team.
      */
     public void removePlayer(Connection databaseConnection, Player player)
@@ -333,7 +333,7 @@ public class Team extends DatabaseEntity
     /**
      * Get the field related to this team.
      *
-     * @param databaseConnection
+     * @param databaseConnection - Connection with database
      * @return Field - Entity if found, null otherwise.
      */
     public Field getField(Connection databaseConnection)
@@ -346,9 +346,10 @@ public class Team extends DatabaseEntity
 
     /**
      * Set the field related to this team.
-     *
+     * 
+     * @param databaseConnection - Connection with database
      * @param field - Field to associate with this team.
-     * @throws FailedToSaveEntityException
+     * @throws FailedToSaveEntityException Failed to save entity.
      */
     public void setField(Connection databaseConnection, Field field) throws FailedToSaveEntityException
     {

@@ -19,7 +19,7 @@ public class Field extends DatabaseEntity
     /**
      * Get the field with the given ID.
      *
-     * @param databaseConnection
+     * @param databaseConnection - Connection with database
      * @param id - ID of the field.
      * @return Field - If found, otherwise return null.
      */
@@ -49,7 +49,7 @@ public class Field extends DatabaseEntity
     /**
      * Get the field with the given name.
      *
-     * @param databaseConnection
+     * @param databaseConnection - Connection with database
      * @param name - Name of the field.
      * @return Field - If found, otherwise return null.
      */

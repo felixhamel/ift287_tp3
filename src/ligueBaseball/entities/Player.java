@@ -27,7 +27,7 @@ public class Player extends DatabaseEntity
     /**
      * Get the player with the given ID.
      *
-     * @param databaseConnection
+     * @param databaseConnection - Connection with database
      * @param id - ID of the player.
      * @return Player - If found, otherwise return null.
      */
@@ -59,7 +59,7 @@ public class Player extends DatabaseEntity
     /**
      * Get Player with firstname and lastname.
      *
-     * @param databaseConnection
+     * @param databaseConnection - Connection with database
      * @param firstName - First name of the player.
      * @param lastName - Last name of the player.
      * @return Player - If found, otherwise return null.
@@ -162,8 +162,8 @@ public class Player extends DatabaseEntity
     /**
      * Get the team this player plays for.
      *
-     * @param databaseConnection
-     * @return
+     * @param databaseConnection - Connection with database
+     * @return Team - Get the current team for the player.
      */
     public Team getTeam(Connection databaseConnection)
     {
@@ -173,9 +173,9 @@ public class Player extends DatabaseEntity
     /**
      * Set the team this player will play for.
      *
-     * @param databaseConnection
-     * @param team
-     * @throws FailedToSaveEntityException
+     * @param databaseConnection - Connection with database
+     * @param team - New team for the player.
+     * @throws FailedToSaveEntityException Failed to save entity.
      */
     public void setTeam(Connection databaseConnection, Team team) throws FailedToSaveEntityException
     {

@@ -22,9 +22,8 @@ public class Official extends DatabaseEntity
     /**
      * Get all the officials.
      *
-     * @param databaseConnection
-     * @param id - ID of the official.
-     * @return List<Official> - All the officials.
+     * @param databaseConnection - Connection with database
+     * @return List - All the officials.
      */
     public static List<Official> getAllOfficials(Connection databaseConnection)
     {
@@ -52,7 +51,7 @@ public class Official extends DatabaseEntity
     /**
      * Get the official with the given ID.
      *
-     * @param databaseConnection
+     * @param databaseConnection - Connection with database
      * @param id - ID of the official.
      * @return Official - If found, otherwise return null.
      */
@@ -82,7 +81,7 @@ public class Official extends DatabaseEntity
     /**
      * Get the official with the given name.
      *
-     * @param databaseConnection
+     * @param databaseConnection - Connection with database
      * @param firstName - First name of the official.
      * @param lastName - Last name of the official.
      * @return Official - If found, otherwise return null.
