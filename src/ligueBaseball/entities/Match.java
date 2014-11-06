@@ -18,7 +18,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class Match extends DatabaseEntity
 {
-    private int localTeamId;
+	private int localTeamId;
     private int visitorTeamId;
     private int fieldId;
     private Date date;
@@ -55,6 +55,12 @@ public class Match extends DatabaseEntity
         }
     }
 
+    /**
+     * 
+     * @param resultSet
+     * @return match
+     * @throws SQLException
+     */
     private static Match getEntityFromResultSet(ResultSet resultSet) throws SQLException
     {
         Match match = new Match();
@@ -120,18 +126,117 @@ public class Match extends DatabaseEntity
         }
     }
 
+    /**
+     * Get all match for a team
+     * 
+     * @param databaseConnection
+     * @param TeamName
+     * @return List of match
+     */
+    public static List<Match> getMatchForTeam(Connection databaseConnection, String TeamName){
+    	List<Match> MatchTeam = new ArrayList<>();
+    	PreparedStatement statement = null;
+    	
+        try {
+        	int id = Team.getTeamWithName(databaseConnection, TeamName).getId();
+        	
+            statement = databaseConnection.prepareStatement("SELECT * FROM match WHERE equipelocal = ? "
+            		+ "or equipevisiteur = ? "
+            		+ "AND pointslocal NOTNULL "
+            		+ "AND pointsvisiteur NOTNULL;");
+            statement.setInt(1, id);
+            statement.setInt(2, id);
+
+            ResultSet MatchResultSet = statement.executeQuery();
+            while (MatchResultSet.next()) {
+            	MatchTeam.add(getEntityFromResultSet(MatchResultSet));
+            }
+            
+
+        } catch (SQLException e) {
+            return null;
+
+        } finally {
+            closeStatement(statement);
+        }
+        return MatchTeam;
+    }
+    
     @Override
     public void delete(Connection databaseConnection) throws FailedToDeleteEntityException, Exception
+
     {
         throw new NotImplementedException();
     }
 
+    /**
+     * Get every match 
+     * 
+     * @param databaseConnection
+     * @return list of all match
+     */
+    public static List<Match> getAllMatch(Connection databaseConnection){
+    	List<Match> Match = new ArrayList<>();
+    	PreparedStatement statement = null;
+
+        try {
+            statement = databaseConnection.prepareStatement("SELECT * FROM match");
+            ResultSet MatchResultSet = statement.executeQuery();
+            while (MatchResultSet.next()) {
+            	Match.add(getEntityFromResultSet(MatchResultSet));
+            }
+            
+
+        } catch (SQLException e) {
+            return null;
+
+        } finally {
+            closeStatement(statement);
+        }
+        return Match;
+    	
+    }
+    
+    /**
+     * Get list of match from a date
+     * 
+     * @param databaseConnection
+     * @param date
+     * @return list of match after the date
+     */
+    public static List<Match> getMatchWithDate(Connection databaseConnection, String date){
+    	
+    	List<Match> MatchDate = new ArrayList<>();
+    	PreparedStatement statement = null;
+
+        try {
+            statement = databaseConnection.prepareStatement("SELECT * FROM match WHERE matchdate >= ?"
+            		+ "AND pointslocal NOTNULL "
+            		+ "AND pointsvisiteur NOTNULL;");
+            statement.setDate(1, Date.valueOf(date));
+
+            ResultSet MatchResultSet = statement.executeQuery();
+            while (MatchResultSet.next()) {
+            	MatchDate.add(getEntityFromResultSet(MatchResultSet));
+            }
+            
+
+        } catch (SQLException e) {
+            return null;
+
+        } finally {
+            closeStatement(statement);
+        }
+        return MatchDate;
+    }
+    
     /**
      * Get the officials for this match, if any.
      *
      * @param databaseConnection
      * @return List of the officials that where there for the match.
      */
+    
     public List<Official> getOfficials(Connection databaseConnection)
     {
         List<Official> officials = new ArrayList<>();
